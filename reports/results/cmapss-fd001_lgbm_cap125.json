@@ -1,0 +1,257 @@
+{
+  "experiment": "cmapss-fd001_lgbm_cap125",
+  "dataset": "cmapss-fd001",
+  "model": "lgbm",
+  "setting": "cap125",
+  "written_by": "aerosentinel.evaluate",
+  "protocol": {
+    "split": "unit-level; val = 20% of train-file units (split_seed=0); preprocessing fit on train-split units only",
+    "test": "last window per official test unit; edge-padded (first cycle repeated) when the unit has fewer cycles than the window",
+    "truth": "capped at 125 (primary) and uncapped (secondary)",
+    "score": "Saxena score, d = pred - true; score_sum is the C-MAPSS convention",
+    "std": "sample std over seeds (ddof=1)"
+  },
+  "config_hash": "be5c76691ce41b28",
+  "config": {
+    "name": "cmapss-fd001_lgbm_cap125",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "split_seed": 0,
+    "deterministic": true,
+    "mlflow": {
+      "tracking_uri": null,
+      "experiment": "aerosentinel-cmapss"
+    },
+    "data": {
+      "dataset": "cmapss-fd001",
+      "family": "cmapss",
+      "subset": "FD001",
+      "cap": 125,
+      "window": 30,
+      "stride": 1,
+      "val_frac": 0.2,
+      "n_regimes": 1,
+      "var_threshold": 0.0001
+    },
+    "model": {
+      "name": "lgbm",
+      "early_stopping_rounds": 200,
+      "params": {
+        "n_estimators": 5000,
+        "learning_rate": 0.02,
+        "num_leaves": 31,
+        "min_child_samples": 50,
+        "subsample": 0.8,
+        "subsample_freq": 1,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 1.0
+      }
+    }
+  },
+  "git": {
+    "sha": "aa3fba96bd56559dd3b74fb53ce308dac01c8187",
+    "dirty": true
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "n_test_units": 100,
+  "n_padded_test_units": 0,
+  "min_test_length": 31,
+  "n_train_units": 80,
+  "n_val_units": 20,
+  "n_train_windows": 14042,
+  "channels": [
+    "s2",
+    "s3",
+    "s4",
+    "s6",
+    "s7",
+    "s8",
+    "s9",
+    "s11",
+    "s12",
+    "s13",
+    "s14",
+    "s15",
+    "s17",
+    "s20",
+    "s21"
+  ],
+  "sensors_dropped": [
+    "s1",
+    "s5",
+    "s10",
+    "s16",
+    "s18",
+    "s19"
+  ],
+  "n_inputs": 91,
+  "summary": {
+    "val": {
+      "rmse": {
+        "mean": 12.334615826182372,
+        "std": 0.09924760832723804
+      },
+      "mae": {
+        "mean": 8.983580924759737,
+        "std": 0.06597209904327468
+      },
+      "score_sum": {
+        "mean": 7666.106003289745,
+        "std": 95.84885977630668
+      },
+      "score_mean": {
+        "mean": 2.078098672618527,
+        "std": 0.025982342037491495
+      },
+      "phm21": {
+        "mean": 7.20635724940045,
+        "std": 0.06194109988235524
+      }
+    },
+    "test_capped": {
+      "rmse": {
+        "mean": 12.263725865094074,
+        "std": 0.10917744099907993
+      },
+      "mae": {
+        "mean": 8.822746650377908,
+        "std": 0.1125191253876477
+      },
+      "score_sum": {
+        "mean": 236.42009689413422,
+        "std": 4.7235420635841425
+      },
+      "score_mean": {
+        "mean": 2.364200968941342,
+        "std": 0.04723542063584149
+      },
+      "phm21": {
+        "mean": 7.313963417017708,
+        "std": 0.07806087341651785
+      }
+    },
+    "test_uncapped": {
+      "rmse": {
+        "mean": 13.541556733567392,
+        "std": 0.07839077126332655
+      },
+      "mae": {
+        "mean": 9.892746650377909,
+        "std": 0.1125191253876477
+      },
+      "score_sum": {
+        "mean": 268.52301621725127,
+        "std": 4.858008425279342
+      },
+      "score_mean": {
+        "mean": 2.685230162172513,
+        "std": 0.04858008425279351
+      },
+      "phm21": {
+        "mean": 8.113393447869953,
+        "std": 0.0634669638730992
+      }
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "val": {
+        "rmse": 12.290184083902588,
+        "mae": 8.933794935743606,
+        "score_sum": 7662.1970584217825,
+        "score_mean": 2.0770390508055794,
+        "phm21": 7.183611567354084
+      },
+      "test_capped": {
+        "rmse": 12.364993023786889,
+        "mae": 8.850188512802124,
+        "score_sum": 240.33221175001717,
+        "score_mean": 2.4033221175001716,
+        "phm21": 7.384157570643531
+      },
+      "test_uncapped": {
+        "rmse": 13.609859161891467,
+        "mae": 9.920188512802124,
+        "score_sum": 272.9332179066006,
+        "score_mean": 2.729332179066006,
+        "phm21": 8.169595670478737
+      },
+      "n_params": 13919,
+      "train_seconds": 3.6551488479999534,
+      "fit_info": {
+        "best_iteration": 449
+      }
+    },
+    {
+      "seed": 1,
+      "val": {
+        "rmse": 12.265346982931476,
+        "mae": 8.958540620503952,
+        "score_sum": 7572.2714156336915,
+        "score_mean": 2.0526623517575744,
+        "phm21": 7.159004667344525
+      },
+      "test_capped": {
+        "rmse": 12.148065863803808,
+        "mae": 8.69904498577118,
+        "score_sum": 231.17263131127885,
+        "score_mean": 2.3117263131127883,
+        "phm21": 7.229896088458299
+      },
+      "test_uncapped": {
+        "rmse": 13.455964322558517,
+        "mae": 9.76904498577118,
+        "score_sum": 263.3157766924803,
+        "score_mean": 2.633157766924803,
+        "phm21": 8.04456104474166
+      },
+      "n_params": 8246,
+      "train_seconds": 2.793830799000716,
+      "fit_info": {
+        "best_iteration": 266
+      }
+    },
+    {
+      "seed": 2,
+      "val": {
+        "rmse": 12.448316411713051,
+        "mae": 9.058407218031652,
+        "score_sum": 7763.849535813763,
+        "score_mean": 2.104594615292427,
+        "phm21": 7.276455513502739
+      },
+      "test_capped": {
+        "rmse": 12.278118707691526,
+        "mae": 8.919006452560424,
+        "score_sum": 237.75544762110664,
+        "score_mean": 2.3775544762110665,
+        "phm21": 7.327836591951296
+      },
+      "test_uncapped": {
+        "rmse": 13.55884671625219,
+        "mae": 9.989006452560425,
+        "score_sum": 269.32005405267296,
+        "score_mean": 2.6932005405267296,
+        "phm21": 8.12602362838946
+      },
+      "n_params": 9176,
+      "train_seconds": 2.868917458001306,
+      "fit_info": {
+        "best_iteration": 296
+      }
+    }
+  ],
+  "leakage_alarm": {
+    "threshold_rmse": 11.0,
+    "triggered": false,
+    "seeds": []
+  }
+}

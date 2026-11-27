@@ -1,0 +1,269 @@
+{
+  "experiment": "cmapss-fd001_lstm_cap125",
+  "dataset": "cmapss-fd001",
+  "model": "lstm",
+  "setting": "cap125",
+  "written_by": "aerosentinel.evaluate",
+  "protocol": {
+    "split": "unit-level; val = 20% of train-file units (split_seed=0); preprocessing fit on train-split units only",
+    "test": "last window per official test unit; edge-padded (first cycle repeated) when the unit has fewer cycles than the window",
+    "truth": "capped at 125 (primary) and uncapped (secondary)",
+    "score": "Saxena score, d = pred - true; score_sum is the C-MAPSS convention",
+    "std": "sample std over seeds (ddof=1)"
+  },
+  "config_hash": "2a44e2f382a3fefb",
+  "config": {
+    "name": "cmapss-fd001_lstm_cap125",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "split_seed": 0,
+    "deterministic": true,
+    "mlflow": {
+      "tracking_uri": null,
+      "experiment": "aerosentinel-cmapss"
+    },
+    "data": {
+      "dataset": "cmapss-fd001",
+      "family": "cmapss",
+      "subset": "FD001",
+      "cap": 125,
+      "window": 30,
+      "stride": 1,
+      "val_frac": 0.2,
+      "n_regimes": 1,
+      "var_threshold": 0.0001
+    },
+    "model": {
+      "name": "lstm",
+      "arch": {
+        "hidden": 64,
+        "layers": 2,
+        "dropout": 0.2
+      },
+      "train": {
+        "lr": 0.0003,
+        "weight_decay": 0.01,
+        "batch_size": 256,
+        "max_epochs": 100,
+        "patience": 10,
+        "warmup_frac": 0.05,
+        "grad_clip": 1.0
+      }
+    }
+  },
+  "git": {
+    "sha": "aa3fba96bd56559dd3b74fb53ce308dac01c8187",
+    "dirty": true
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "n_test_units": 100,
+  "n_padded_test_units": 0,
+  "min_test_length": 31,
+  "n_train_units": 80,
+  "n_val_units": 20,
+  "n_train_windows": 14042,
+  "channels": [
+    "s2",
+    "s3",
+    "s4",
+    "s6",
+    "s7",
+    "s8",
+    "s9",
+    "s11",
+    "s12",
+    "s13",
+    "s14",
+    "s15",
+    "s17",
+    "s20",
+    "s21"
+  ],
+  "sensors_dropped": [
+    "s1",
+    "s5",
+    "s10",
+    "s16",
+    "s18",
+    "s19"
+  ],
+  "n_inputs": 15,
+  "summary": {
+    "val": {
+      "rmse": {
+        "mean": 12.290238723351179,
+        "std": 0.13342564340348223
+      },
+      "mae": {
+        "mean": 8.770102154881604,
+        "std": 0.0462046388212435
+      },
+      "score_sum": {
+        "mean": 10094.871536260549,
+        "std": 815.1644475683108
+      },
+      "score_mean": {
+        "mean": 2.7364791369640957,
+        "std": 0.2209716583270022
+      },
+      "phm21": {
+        "mean": 7.5133589301576365,
+        "std": 0.17674191297721129
+      }
+    },
+    "test_capped": {
+      "rmse": {
+        "mean": 14.348152333345197,
+        "std": 0.6684006784729554
+      },
+      "mae": {
+        "mean": 10.839308703740437,
+        "std": 0.43532944520774924
+      },
+      "score_sum": {
+        "mean": 397.42660051568464,
+        "std": 49.01338368729901
+      },
+      "score_mean": {
+        "mean": 3.974266005156847,
+        "std": 0.4901338368729903
+      },
+      "phm21": {
+        "mean": 9.161209169251022,
+        "std": 0.5765462463072859
+      }
+    },
+    "test_uncapped": {
+      "rmse": {
+        "mean": 15.395059058826641,
+        "std": 0.6301690694320154
+      },
+      "mae": {
+        "mean": 11.796773303349815,
+        "std": 0.5047457743548345
+      },
+      "score_sum": {
+        "mean": 427.5688591624482,
+        "std": 47.878601355414084
+      },
+      "score_mean": {
+        "mean": 4.275688591624482,
+        "std": 0.47878601355414085
+      },
+      "phm21": {
+        "mean": 9.835373825225561,
+        "std": 0.5491349703238365
+      }
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "val": {
+        "rmse": 12.415540094265916,
+        "mae": 8.772682350517677,
+        "score_sum": 10932.892256526504,
+        "score_mean": 2.9636465862094075,
+        "phm21": 7.6895933402376615
+      },
+      "test_capped": {
+        "rmse": 14.798062753626407,
+        "mae": 11.152722330093384,
+        "score_sum": 438.7526110687107,
+        "score_mean": 4.387526110687107,
+        "phm21": 9.592794432156758
+      },
+      "test_uncapped": {
+        "rmse": 15.70143849208455,
+        "mae": 12.159802408218384,
+        "score_sum": 463.8193855220738,
+        "score_mean": 4.638193855220738,
+        "phm21": 10.169816173652645
+      },
+      "n_params": 54081,
+      "train_seconds": 173.98950600599892,
+      "fit_info": {
+        "best_epoch": 26,
+        "best_val_rmse": 12.415540094265916,
+        "epochs_run": 37,
+        "train_seconds": 173.96206157000051
+      }
+    },
+    {
+      "seed": 1,
+      "val": {
+        "rmse": 12.305222290339483,
+        "mae": 8.722661481861719,
+        "score_sum": 10047.05389006879,
+        "score_mean": 2.7235169124610437,
+        "phm21": 7.514369601400263
+      },
+      "test_capped": {
+        "rmse": 14.666285446845317,
+        "mae": 11.022955603599549,
+        "score_sum": 410.25139031897316,
+        "score_mean": 4.102513903189732,
+        "phm21": 9.384399675017525
+      },
+      "test_uncapped": {
+        "rmse": 15.813456420626014,
+        "mae": 12.010133032798768,
+        "score_sum": 445.5930769158137,
+        "score_mean": 4.455930769158137,
+        "phm21": 10.134693594892076
+      },
+      "n_params": 54081,
+      "train_seconds": 171.85736772199925,
+      "fit_info": {
+        "best_epoch": 28,
+        "best_val_rmse": 12.305222290339483,
+        "epochs_run": 39,
+        "train_seconds": 171.84887590200015
+      }
+    },
+    {
+      "seed": 2,
+      "val": {
+        "rmse": 12.149953785448135,
+        "mae": 8.814962632265411,
+        "score_sum": 9304.668462186353,
+        "score_mean": 2.522273912221836,
+        "phm21": 7.3361138488349855
+      },
+      "test_capped": {
+        "rmse": 13.580108799563863,
+        "mae": 10.342248177528381,
+        "score_sum": 343.2758001593702,
+        "score_mean": 3.432758001593702,
+        "phm21": 8.506433400578782
+      },
+      "test_uncapped": {
+        "rmse": 14.670282263769355,
+        "mae": 11.220384469032288,
+        "score_sum": 373.294115049457,
+        "score_mean": 3.73294115049457,
+        "phm21": 9.201611707131963
+      },
+      "n_params": 54081,
+      "train_seconds": 147.8637905579999,
+      "fit_info": {
+        "best_epoch": 38,
+        "best_val_rmse": 12.149953785448135,
+        "epochs_run": 49,
+        "train_seconds": 147.85871831199984
+      }
+    }
+  ],
+  "leakage_alarm": {
+    "threshold_rmse": 11.0,
+    "triggered": false,
+    "seeds": []
+  }
+}
