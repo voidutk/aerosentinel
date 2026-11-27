@@ -58,11 +58,17 @@ def prepare_dev_from_cfg(cfg: DictConfig) -> DevData:
     )
 
 
-def git_info(root: Path) -> dict[str, Any]:
-    """Current commit SHA and whether tracked files had uncommitted changes.
+#: Generated outputs: changes here do not make the tree dirty (``evaluate`` writes results
+#: JSONs and ``make_tables`` rewrites README tables while a batch of runs is in progress).
+GENERATED_PATHS: tuple[str, ...] = ("reports/results", "README.md")
 
-    Untracked files (logs, scratch output) do not count as dirty: they cannot change what
-    the committed code computes.
+
+def git_info(root: Path) -> dict[str, Any]:
+    """Current commit SHA and whether tracked code or config had uncommitted changes.
+
+    Untracked files (logs, scratch output) and the generated outputs in
+    :data:`GENERATED_PATHS` do not count as dirty: they cannot change what the committed
+    code computes.
     """
 
     def _git(*args: str) -> str:
@@ -75,5 +81,14 @@ def git_info(root: Path) -> dict[str, Any]:
 
     return {
         "sha": _git("rev-parse", "HEAD") or None,
-        "dirty": bool(_git("status", "--porcelain", "--untracked-files=no")),
+        "dirty": bool(
+            _git(
+                "status",
+                "--porcelain",
+                "--untracked-files=no",
+                "--",
+                ".",
+                *(f":(exclude){p}" for p in GENERATED_PATHS),
+            )
+        ),
     }
