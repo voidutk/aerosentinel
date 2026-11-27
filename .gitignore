@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+
+# Data (anchored: must not match the package src/aerosentinel/data/)
+/data/
+
+# Experiment tracking / Hydra outputs
+mlruns/
+mlflow.db
+outputs/
+multirun/
+
+# Model artifacts (the demo bundle is the one exception)
+*.ckpt
+*.onnx
+!app/demo_data/**
+
+# Local secrets / settings
+.env
+.claude/settings.local.json
