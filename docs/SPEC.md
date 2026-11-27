@@ -40,7 +40,7 @@ The headline story for interviews: *"Point predictions are useless to a maintena
 | FD001 | 100 | 100 | 1 (sea level) | 1 (HPC) |
 | FD002 | 260 | 259 | 6 | 1 (HPC) |
 | FD003 | 100 | 100 | 1 | 2 (HPC, Fan) |
-| FD004 | 248 | 249 | 6 | 2 (HPC, Fan) |
+| FD004 | 249 | 248 | 6 | 2 (HPC, Fan) |
 
 - Train trajectories run to failure. Test trajectories stop before failure; `RUL_FD00x.txt` gives the true RUL at the last test cycle. Standard evaluation uses **only the last window of each test unit**.
 - Test metrics are reported against two versions of the truth: **capped at 125 (primary)** and uncapped (secondary). The leakage alarm (§3) applies to the capped number.
@@ -179,7 +179,7 @@ aerosentinel/
 **Results naming (single scheme):** `reports/results/<dataset>_<model>_<setting>.json`. Rules:
 - Lowercase. `_` separates the three fields; `-` joins words inside a field.
 - `dataset` ∈ `cmapss-fd001…cmapss-fd004`, `ncmapss-ds01…ncmapss-ds07`, `ncmapss-pooled`.
-- `model` ∈ `lgbm`, `cnn1d`, `lstm`, `tcn`, `tsmixer`, `transformer`, or `data` for data audits.
+- `model` ∈ `constant`, `ridge` (naive baselines), `lgbm`, `cnn1d`, `lstm`, `tcn`, `tsmixer`, `transformer`, or `data` for data audits.
 - `setting` encodes everything else that defines the run, e.g. `single-cruise-cap34-ds10`, `cqr-unit-a10`, `policy-cf10`.
 - The Hydra experiment name equals the file stem, so `configs/experiment/<stem>.yaml` → `reports/results/<stem>.json`.
 

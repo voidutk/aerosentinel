@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - override /data: cmapss_fd003
+  - override /model: lstm
+
+name: cmapss-fd003_lstm_cap125

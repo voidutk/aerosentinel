@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - override /data: cmapss_fd004
+  - override /model: cnn1d
+
+name: cmapss-fd004_cnn1d_cap125

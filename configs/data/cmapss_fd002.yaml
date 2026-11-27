@@ -1,0 +1,10 @@
+# C-MAPSS FD002 (SPEC §1.1). Regime KMeans k=6; variance threshold after regime normalization.
+dataset: cmapss-fd002
+family: cmapss
+subset: FD002
+cap: 125            # piecewise-linear RUL cap on training targets; test truth reported capped + uncapped
+window: 30
+stride: 1           # one value for every split; C-MAPSS test uses the last window per unit
+val_frac: 0.2       # validation = 20% of train-file units (unit-level split)
+n_regimes: 6
+var_threshold: 1.0e-4

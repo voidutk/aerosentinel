@@ -11,7 +11,7 @@ How to run each phase:
 
 Status: update the checkbox when a phase ships.
 
-- [ ] Phase 0 — Scaffold (½ day) → no tag
+- [x] Phase 0 — Scaffold (½ day) → no tag
 - [ ] Phase 1 — C-MAPSS baselines (2–3 days) → `v0.1`
 - [ ] Phase 2 — N-CMAPSS pipeline + EDA (2–3 days) → `v0.2`
 - [ ] Phase 3 — Deep models + generalization (4–5 days) → `v0.3`

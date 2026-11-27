@@ -1,0 +1,25 @@
+# AeroSentinel root Hydra config. Run: uv run python -m aerosentinel.train experiment=<stem>
+# The experiment name equals the file stem of configs/experiment/<stem>.yaml and of
+# reports/results/<stem>.json (SPEC §4).
+defaults:
+  - _self_
+  - data: cmapss_fd001
+  - model: lgbm
+  - experiment: null
+
+name: ${data.dataset}_${model.name}_cap${data.cap}
+seed: 0            # model seed for a single `train` call
+seeds: [0, 1, 2]   # seeds aggregated by `evaluate` (mean ± std, ddof=1)
+split_seed: 0      # unit split seed, fixed so model comparisons are paired
+deterministic: true
+
+mlflow:
+  tracking_uri: null        # null -> sqlite:///<project root>/mlflow.db (gitignored)
+  experiment: aerosentinel-cmapss
+
+hydra:
+  job:
+    chdir: false
+  run:
+    dir: outputs/hydra/${name}/seed${seed}
+  output_subdir: null

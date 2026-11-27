@@ -1,0 +1,3 @@
+# Naive baseline: ridge on the flattened T x C window; alpha picked on validation units.
+name: ridge
+alphas: [0.1, 1.0, 10.0, 100.0]

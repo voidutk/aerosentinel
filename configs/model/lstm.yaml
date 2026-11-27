@@ -1,0 +1,14 @@
+# LSTM, 2 layers x 64 hidden (SPEC §5.1 item 3). Training defaults from SPEC §5.3.
+name: lstm
+arch:
+  hidden: 64
+  layers: 2
+  dropout: 0.2
+train:
+  lr: 3.0e-4
+  weight_decay: 1.0e-2
+  batch_size: 256
+  max_epochs: 100
+  patience: 10
+  warmup_frac: 0.05
+  grad_clip: 1.0
