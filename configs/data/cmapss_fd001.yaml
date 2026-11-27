@@ -1,4 +1,4 @@
-# C-MAPSS FD001 (SPEC §1.1). Regime KMeans k=1; variance threshold after regime normalization.
+# C-MAPSS FD001 (SPEC §1.1). Regime KMeans k=1; sensor selection after regime normalization.
 dataset: cmapss-fd001
 family: cmapss
 subset: FD001
@@ -8,3 +8,4 @@ stride: 1           # one value for every split; C-MAPSS test uses the last wind
 val_frac: 0.2       # validation = 20% of train-file units (unit-level split)
 n_regimes: 1
 var_threshold: 1.0e-4
+max_distinct: 2     # also drop sensors with <= 2 distinct raw values in every regime (train split)

@@ -39,7 +39,7 @@ def test_wrong_column_count_raises(tmp_path: Path, n_values: int) -> None:
 
 
 def test_rul_file_with_trailing_spaces(tmp_path: Path) -> None:
-    p = tmp_path / "RUL_FD001.txt"
+    p = tmp_path / "rul_truth.txt"  # official RUL_* names are guarded (test_test_guard.py)
     p.write_text("112 \n98 \n69 \n")
     np.testing.assert_array_equal(read_rul_file(p), [112, 98, 69])
     p.write_text("1 2\n3 4\n")

@@ -69,7 +69,7 @@ class RidgeLastWindow:
 
     name = "ridge"
 
-    def __init__(self, alphas: Sequence[float] = (0.1, 1.0, 10.0, 100.0)) -> None:
+    def __init__(self, alphas: Sequence[float] = (0.1, 1.0, 10.0, 100.0, 1e3, 1e4, 1e5)) -> None:
         self.alphas = [float(a) for a in alphas]
         self.coef: F64 | None = None
         self.intercept: float = 0.0

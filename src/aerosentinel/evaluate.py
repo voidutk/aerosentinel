@@ -2,7 +2,8 @@
 
 The only code that loads official C-MAPSS test units. For every seed in ``cfg.seeds`` it
 loads the saved run, predicts the last (edge-padded if short) window of each test unit and
-scores it against capped (primary) and uncapped truth. It writes
+scores it against capped (primary) and uncapped truth, overall and split into edge-padded
+and full-length test units. It writes
 ``reports/results/<stem>.json`` with per-seed metrics and mean ± std (ddof=1).
 """
 
@@ -51,6 +52,23 @@ def leakage_alarm(dataset: str, per_seed: list[dict[str, Any]]) -> dict[str, Any
     return {"threshold_rmse": LEAKAGE_ALARM_RMSE, "triggered": triggered, "seeds": low}
 
 
+def padding_breakdown(y_capped: np.ndarray, pred: np.ndarray, padded: np.ndarray) -> dict[str, Any]:
+    """Capped-truth metrics on padded vs full-length test units (None when a group is empty).
+
+    Parameters
+    ----------
+    y_capped, pred : numpy.ndarray
+        Capped truth and predictions, one per test unit.
+    padded : numpy.ndarray of bool
+        True for units shorter than the window (edge-padded).
+    """
+    out: dict[str, Any] = {}
+    for key, mask in (("padded", padded), ("not_padded", ~padded)):
+        n = int(mask.sum())
+        out[key] = {"n_units": n, **point_metrics(y_capped[mask], pred[mask])} if n else None
+    return out
+
+
 def evaluate(cfg: DictConfig) -> dict[str, Any]:
     """Evaluate every seed of an experiment and write its results JSON.
 
@@ -76,7 +94,8 @@ def evaluate(cfg: DictConfig) -> dict[str, Any]:
             pre: Preprocessor = pickle.load(f)  # noqa: S301 - our own run artifact
         model = build_model(cfg.model, target_scale=float(cap) if cap is not None else 125.0)
         model.load(rd)
-        test = prepare_test(raw_dir(cfg, paths), str(cfg.data.subset), pre, window)
+        # The one place in the code base allowed to read official test files.
+        test = prepare_test(raw_dir(cfg, paths), str(cfg.data.subset), pre, window, allow_test=True)
         pred = model.predict(test.x, test.regime_last).astype(np.float64)
         y_capped = cap_truth(test.rul_true, None if cap is None else int(cap))
         y_raw = cap_truth(test.rul_true, None)
@@ -96,6 +115,8 @@ def evaluate(cfg: DictConfig) -> dict[str, Any]:
                 "val": meta["val"],
                 "test_capped": point_metrics(y_capped, pred),
                 "test_uncapped": point_metrics(y_raw, pred),
+                "test_capped_by_padding": padding_breakdown(y_capped, pred, test.n_padded > 0),
+                "train_git": meta.get("git"),
                 "n_params": meta["n_params"],
                 "train_seconds": meta["train_seconds"],
                 "fit_info": meta["fit_info"],
@@ -110,6 +131,7 @@ def evaluate(cfg: DictConfig) -> dict[str, Any]:
             "n_train_windows": meta["n_train_windows"],
             "channels": meta["channels"],
             "sensors_dropped": meta["sensors_dropped"],
+            "sensors_dropped_by_rule": meta.get("sensors_dropped_by_rule"),
             "n_inputs": len(meta["input_names"]),
         }
 
@@ -134,7 +156,15 @@ def evaluate(cfg: DictConfig) -> dict[str, Any]:
         "git": git_info(paths.root),
         "seeds": [int(s) for s in cfg.seeds],
         **test_info,
-        "summary": {k: summarize(per_seed, k) for k in ("val", "test_capped", "test_uncapped")},
+        "summary": {
+            **{k: summarize(per_seed, k) for k in ("val", "test_capped", "test_uncapped")},
+            "test_capped_by_padding": {
+                g: summarize([s["test_capped_by_padding"] for s in per_seed], g)
+                if per_seed[0]["test_capped_by_padding"][g]
+                else None
+                for g in ("padded", "not_padded")
+            },
+        },
         "per_seed": per_seed,
         "leakage_alarm": leakage_alarm(dataset, per_seed),
     }

@@ -3,7 +3,7 @@
 ``prepare_dev`` reads only the train file: it splits units into train/val, fits the
 regime normalizer and the sensor selector on **train-split units only**, and returns
 per-unit arrays plus window indices. ``prepare_test`` applies the fitted preprocessor to
-the official test file; only :mod:`aerosentinel.evaluate` calls it.
+the official test file; only :mod:`aerosentinel.evaluate` may call it (``allow_test``).
 """
 
 from __future__ import annotations
@@ -51,9 +51,13 @@ class Preprocessor:
 
 
 def fit_preprocessor(
-    train_df: pd.DataFrame, n_regimes: int, var_threshold: float, seed: int = 0
+    train_df: pd.DataFrame,
+    n_regimes: int,
+    var_threshold: float,
+    seed: int = 0,
+    max_distinct: int = 2,
 ) -> Preprocessor:
-    """Fit regime normalization, THEN the variance threshold, on ``train_df`` only.
+    """Fit regime normalization, THEN sensor selection, on ``train_df`` only.
 
     Parameters
     ----------
@@ -65,6 +69,8 @@ def fit_preprocessor(
         Variance threshold applied after regime normalization.
     seed : int, default 0
         KMeans random state.
+    max_distinct : int, default 2
+        Drop sensors with at most this many distinct raw values in every regime.
 
     Returns
     -------
@@ -72,7 +78,8 @@ def fit_preprocessor(
         Fitted preprocessor.
     """
     norm = RegimeNormalizer(n_regimes=n_regimes, seed=seed).fit(train_df)
-    sel = SensorSelector(threshold=var_threshold).fit(norm.transform(train_df))
+    sel = SensorSelector(threshold=var_threshold, max_distinct=max_distinct)
+    sel.fit(norm.transform(train_df), train_df)
     return Preprocessor(norm, sel, sorted(int(u) for u in train_df[UNIT].unique()))
 
 
@@ -140,6 +147,7 @@ def prepare_dev(
     split_seed: int,
     n_regimes: int,
     var_threshold: float,
+    max_distinct: int = 2,
 ) -> DevData:
     """Load the train file, split by unit, fit preprocessing on train-split units only.
 
@@ -152,7 +160,9 @@ def prepare_dev(
     tr_units, va_units = train_val_units(df[UNIT].unique().tolist(), val_frac, split_seed)
     tr_df = df[df[UNIT].isin(tr_units)]
     va_df = df[df[UNIT].isin(va_units)]
-    pre = fit_preprocessor(tr_df, n_regimes, var_threshold, seed=split_seed)
+    pre = fit_preprocessor(
+        tr_df, n_regimes, var_threshold, seed=split_seed, max_distinct=max_distinct
+    )
     return DevData(
         pre,
         _window_data(tr_df, pre, window, stride, RUL),
@@ -172,12 +182,15 @@ class TestData:
     rul_true: NDArray[np.int64]
 
 
-def prepare_test(raw_dir: Path, subset: str, pre: Preprocessor, window: int) -> TestData:
+def prepare_test(
+    raw_dir: Path, subset: str, pre: Preprocessor, window: int, *, allow_test: bool = False
+) -> TestData:
     """Apply the fitted preprocessor to the official test file; keep each unit's last window.
 
-    Only :mod:`aerosentinel.evaluate` calls this.
+    Raises :class:`aerosentinel.data.cmapss.TestDataAccessError` unless
+    ``allow_test=True``, which only :mod:`aerosentinel.evaluate` passes.
     """
-    df, rul = load_test(raw_dir, subset)
+    df, rul = load_test(raw_dir, subset, allow_test=allow_test)
     units, xs, _, rs = unit_arrays(pre.transform(df), pre.channels, label=None)
     wins, pads = zip(*(last_window(x, window) for x in xs), strict=True)
     return TestData(

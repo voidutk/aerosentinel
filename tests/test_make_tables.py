@@ -15,7 +15,9 @@ def _stat(m: float, s: float = 0.5) -> dict[str, float]:
     return {"mean": m, "std": s}
 
 
-def _result(dataset: str, model: str, rmse: float, alarm: bool = False) -> dict[str, Any]:
+def _result(
+    dataset: str, model: str, rmse: float, alarm: bool = False, val: float | None = None
+) -> dict[str, Any]:
     block = {
         "rmse": _stat(rmse),
         "mae": _stat(rmse * 0.8),
@@ -33,7 +35,11 @@ def _result(dataset: str, model: str, rmse: float, alarm: bool = False) -> dict[
         "n_val_units": 20,
         "n_test_units": 100,
         "n_padded_test_units": 0,
-        "summary": {"test_capped": block, "test_uncapped": {**block, "rmse": _stat(rmse + 5)}},
+        "summary": {
+            "val": {**block, "rmse": _stat(rmse if val is None else val)},
+            "test_capped": block,
+            "test_uncapped": {**block, "rmse": _stat(rmse + 5)},
+        },
         "leakage_alarm": {"triggered": alarm},
     }
 
@@ -61,17 +67,21 @@ def test_alarm_is_surfaced() -> None:
     assert "Leakage alarm" in md
 
 
-def test_targets_use_best_model_per_subset() -> None:
+def test_targets_pick_model_on_validation_not_test() -> None:
     res = [
-        _result("cmapss-fd001", "lgbm", 12.5),
-        _result("cmapss-fd001", "lstm", 14.0),
-        _result("cmapss-fd004", "cnn1d", 21.0),
+        # LightGBM is best on test, LSTM best on val: the LSTM must be picked.
+        _result("cmapss-fd001", "lgbm", 12.5, val=15.0),
+        _result("cmapss-fd001", "lstm", 14.0, val=13.0),
+        _result("cmapss-fd004", "cnn1d", 21.0, val=18.0),
     ]
     md = mt.render_cmapss_targets(res)
     fd001 = next(ln for ln in md.splitlines() if ln.startswith("| FD001"))
     fd004 = next(ln for ln in md.splitlines() if ln.startswith("| FD004"))
-    assert "LightGBM" in fd001 and "12.50" in fd001 and fd001.endswith("| yes |")
+    assert "LSTM" in fd001 and "13.00 ± 0.50" in fd001 and "14.00 ± 0.50" in fd001
+    assert fd001.endswith("| **no** |")  # LSTM test RMSE 14 > 13
+    assert "LightGBM" not in fd001
     assert "1D-CNN" in fd004 and "**no**" in fd004
+    assert "picked on val" in md
     assert "not run" in mt.render_cmapss_targets([])
 
 

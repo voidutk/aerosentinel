@@ -102,7 +102,8 @@ def render_cmapss_table(results: list[Result]) -> str:
         "Score Σ = summed Saxena score with d = pred − true (late errors cost more).",
         "",
         "Protocol: unit-level split (val = 20% of train-file units, fixed split seed); regime "
-        "normalization and the sensor variance threshold fit on train-split units only; "
+        "normalization and sensor selection (variance threshold, plus sensors with ≤ 2 distinct "
+        "raw values in every regime) fit on train-split units only; "
         "window 30, stride 1; one prediction per test unit from its last window; train targets "
         "capped at 125. Units train/val/test: " + units + ". Test units shorter than the window "
         "are edge-padded by repeating their first cycle.",
@@ -114,26 +115,35 @@ def render_cmapss_table(results: list[Result]) -> str:
     return "\n".join([*lines, *notes])
 
 
-#: Phase 1 targets on capped test truth (SPEC §3), checked against the best model per subset.
+#: Phase 1 targets on capped test truth (SPEC §3).
 CMAPSS_TARGETS: dict[str, float] = {"cmapss-fd001": 13.0, "cmapss-fd004": 20.0}
 
 
 def render_cmapss_targets(results: list[Result]) -> str:
-    """Check the SPEC §3 Phase 1 targets against the best mean capped RMSE per subset."""
+    """Check the SPEC §3 Phase 1 targets.
+
+    Per subset the model is picked by **validation** RMSE (mean over seeds, validation
+    units only); the row then reports that model's capped test RMSE. Test numbers never
+    take part in the choice.
+    """
     lines = [
-        "| Target (capped RMSE) | Best model | Best mean RMSE | Met? |",
-        "|---|---|---:|---|",
+        "| Target (capped test RMSE) | Model (picked on val) | Val RMSE | Test RMSE (capped) "
+        "| Met? |",
+        "|---|---|---:|---:|---|",
     ]
     for dataset, target in CMAPSS_TARGETS.items():
         rows = [r for r in results if r["dataset"] == dataset and r["model"] in CMAPSS_MODELS]
         label = f"{dataset.removeprefix('cmapss-').upper()} ≤ {target:g}"
         if not rows:
-            lines.append(f"| {label} | – | – | not run |")
+            lines.append(f"| {label} | – | – | – | not run |")
             continue
-        best = min(rows, key=lambda r: r["summary"]["test_capped"]["rmse"]["mean"])
-        m = best["summary"]["test_capped"]["rmse"]["mean"]
-        met = "yes" if m <= target else "**no**"
-        lines.append(f"| {label} | {CMAPSS_MODELS[best['model']]} | {m:.2f} | {met} |")
+        pick = min(rows, key=lambda r: r["summary"]["val"]["rmse"]["mean"])
+        test = pick["summary"]["test_capped"]["rmse"]
+        met = "yes" if test["mean"] <= target else "**no**"
+        lines.append(
+            f"| {label} | {CMAPSS_MODELS[pick['model']]} | "
+            f"{fmt(pick['summary']['val']['rmse'], 2)} | {fmt(test, 2)} | {met} |"
+        )
     return "\n".join(lines)
 
 

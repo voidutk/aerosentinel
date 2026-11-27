@@ -4,10 +4,15 @@ Order of preprocessing (fixed by SPEC §1.3 item 5):
 
 1. Regime normalization: KMeans (k=6) on the 3 operating settings for FD002/FD004, then a
    per-regime z-score of every sensor. FD001/FD003 use one global regime.
-2. THEN the near-constant-sensor variance threshold, on the normalized training data.
+2. THEN sensor selection on the training data: a sensor is dropped if its normalized
+   variance is <= the threshold, or if it takes at most ``max_distinct`` distinct raw values
+   within every regime (quantized, near-binary sensors such as FD001 s6; a z-score turns
+   one flip between two raw levels into a large spike).
 
-Both steps are fit on training-split units only. Model channels are the kept normalized
-sensors; settings, unit, cycle and RUL never become channels.
+Both steps are fit on training-split units only. Official test files can be read only with
+an explicit ``allow_test=True``, which only :mod:`aerosentinel.evaluate` passes. Model
+channels are the kept normalized sensors; settings, unit, cycle and RUL never become
+channels.
 """
 
 from __future__ import annotations
@@ -29,8 +34,25 @@ assert len(COLUMNS) == N_COLUMNS
 
 FloatArray = NDArray[np.float64]
 
+#: File-name prefixes of the official test trajectories and their true RUL.
+TEST_FILE_PREFIXES: tuple[str, ...] = ("test_", "RUL_")
 
-def read_cmapss_table(path: Path) -> pd.DataFrame:
+
+class TestDataAccessError(PermissionError):
+    """Official test files were requested without ``allow_test=True`` (SPEC §1.3 item 6)."""
+
+    __test__ = False  # not a pytest test class
+
+
+def _guard_test_file(path: Path, allow_test: bool) -> None:
+    if path.name.startswith(TEST_FILE_PREFIXES) and not allow_test:
+        raise TestDataAccessError(
+            f"{path.name} is an official test file; only aerosentinel.evaluate may read it "
+            "(pass allow_test=True there and nowhere else)"
+        )
+
+
+def read_cmapss_table(path: Path, *, allow_test: bool = False) -> pd.DataFrame:
     """Read one ``train_FD00x.txt`` / ``test_FD00x.txt`` file.
 
     The files are whitespace-separated with trailing spaces, so they are parsed with
@@ -40,6 +62,8 @@ def read_cmapss_table(path: Path) -> pd.DataFrame:
     ----------
     path : pathlib.Path
         Text file.
+    allow_test : bool, default False
+        Must be True to read an official ``test_*`` file.
 
     Returns
     -------
@@ -50,7 +74,10 @@ def read_cmapss_table(path: Path) -> pd.DataFrame:
     ------
     ValueError
         If the file does not parse into exactly 26 columns.
+    TestDataAccessError
+        If ``path`` is an official test file and ``allow_test`` is False.
     """
+    _guard_test_file(path, allow_test)
     df = pd.read_csv(path, sep=r"\s+", header=None)
     if df.shape[1] != N_COLUMNS:
         raise ValueError(f"{path}: expected {N_COLUMNS} columns, got {df.shape[1]}")
@@ -59,13 +86,15 @@ def read_cmapss_table(path: Path) -> pd.DataFrame:
     return df.astype({UNIT: "int64", CYCLE: "int64"})
 
 
-def read_rul_file(path: Path) -> NDArray[np.int64]:
+def read_rul_file(path: Path, *, allow_test: bool = False) -> NDArray[np.int64]:
     """Read ``RUL_FD00x.txt``: one true RUL per test unit, in unit order.
 
     Parameters
     ----------
     path : pathlib.Path
         Text file.
+    allow_test : bool, default False
+        Must be True to read an official ``RUL_*`` file.
 
     Returns
     -------
@@ -76,7 +105,10 @@ def read_rul_file(path: Path) -> NDArray[np.int64]:
     ------
     ValueError
         If the file does not parse into exactly one column.
+    TestDataAccessError
+        If ``path`` is an official RUL file and ``allow_test`` is False.
     """
+    _guard_test_file(path, allow_test)
     df = pd.read_csv(path, sep=r"\s+", header=None)
     if df.shape[1] != 1:
         raise ValueError(f"{path}: expected 1 column, got {df.shape[1]}")
@@ -88,23 +120,48 @@ def load_train(raw_dir: Path, subset: str) -> pd.DataFrame:
     return read_cmapss_table(raw_dir / f"train_{subset}.txt")
 
 
-def load_test(raw_dir: Path, subset: str) -> tuple[pd.DataFrame, NDArray[np.int64]]:
+def load_test(
+    raw_dir: Path, subset: str, *, allow_test: bool = False
+) -> tuple[pd.DataFrame, NDArray[np.int64]]:
     """Load ``test_<subset>.txt`` and ``RUL_<subset>.txt``.
 
-    Only :mod:`aerosentinel.evaluate` calls this (official test units are touched only by
-    the final evaluation).
+    Official test units are touched only by the final evaluation, so this raises unless
+    ``allow_test=True``; only :mod:`aerosentinel.evaluate` passes it.
+
+    Parameters
+    ----------
+    raw_dir : pathlib.Path
+        ``data/raw/cmapss``.
+    subset : str
+        ``FD001`` ... ``FD004``.
+    allow_test : bool, default False
+        Explicit permission to read the official test files.
 
     Returns
     -------
     (pandas.DataFrame, numpy.ndarray)
         Truncated test trajectories and the true RUL at each unit's last cycle,
         ordered by sorted unit id.
+
+    Raises
+    ------
+    TestDataAccessError
+        If ``allow_test`` is False.
+    ValueError
+        If test unit ids are not exactly ``1..N`` or the RUL file has a different length.
+        The RUL file is matched to units by row order, so both checks are needed.
     """
-    df = read_cmapss_table(raw_dir / f"test_{subset}.txt")
-    rul = read_rul_file(raw_dir / f"RUL_{subset}.txt")
-    n_units = df[UNIT].nunique()
-    if len(rul) != n_units:
-        raise ValueError(f"{subset}: {len(rul)} RUL values for {n_units} test units")
+    if not allow_test:
+        raise TestDataAccessError(
+            f"official {subset} test units can only be loaded by aerosentinel.evaluate"
+        )
+    df = read_cmapss_table(raw_dir / f"test_{subset}.txt", allow_test=allow_test)
+    rul = read_rul_file(raw_dir / f"RUL_{subset}.txt", allow_test=allow_test)
+    units = sorted(int(u) for u in df[UNIT].unique())
+    if units != list(range(1, len(units) + 1)):
+        raise ValueError(f"{subset}: test unit ids are not exactly 1..{len(units)}")
+    if len(rul) != len(units):
+        raise ValueError(f"{subset}: {len(rul)} RUL values for {len(units)} test units")
     return df, rul
 
 
@@ -212,28 +269,56 @@ class RegimeNormalizer:
 
 @dataclass
 class SensorSelector:
-    """Variance threshold on regime-normalized sensors, fit on training-split rows.
+    """Sensor selection fit on training-split rows, after regime normalization.
 
-    After a per-regime z-score every non-constant sensor has variance ~1, so with the
-    default threshold this drops sensors that are constant within every regime.
+    Two rules, applied together:
+
+    * **variance**: normalized training variance <= ``threshold``. After a per-regime
+      z-score every non-constant sensor has variance ~1, so this only drops sensors that
+      are constant within every regime.
+    * **few distinct values**: at most ``max_distinct`` distinct *raw* values within every
+      regime. Such quantized sensors survive the variance rule, but the z-score turns one
+      flip between their few levels into a large spike.
 
     Parameters
     ----------
     threshold : float
-        Sensors with training variance <= threshold are dropped.
+        Variance threshold on the normalized sensors.
+    max_distinct : int
+        A sensor with <= this many distinct raw values in every regime is dropped.
+        0 disables the rule.
     """
 
     threshold: float = 1e-4
+    max_distinct: int = 2
     kept_: list[str] = field(default_factory=list)
     dropped_: list[str] = field(default_factory=list)
+    dropped_by_rule_: dict[str, list[str]] = field(default_factory=dict)
 
-    def fit(self, train_norm: pd.DataFrame) -> SensorSelector:
-        """Fit on regime-normalized training-split rows."""
+    def fit(self, train_norm: pd.DataFrame, train_raw: pd.DataFrame) -> SensorSelector:
+        """Fit on training-split rows.
+
+        Parameters
+        ----------
+        train_norm : pandas.DataFrame
+            Regime-normalized rows (with the ``regime`` column from
+            :meth:`RegimeNormalizer.transform`).
+        train_raw : pandas.DataFrame
+            The same rows before normalization (same index), for the distinct-value rule.
+        """
+        if not train_norm.index.equals(train_raw.index):
+            raise ValueError("train_norm and train_raw must hold the same rows")
         var = train_norm[list(SENSORS)].var(axis=0, ddof=0)
-        self.kept_ = [s for s in SENSORS if var[s] > self.threshold]
-        self.dropped_ = [s for s in SENSORS if s not in self.kept_]
+        low_var = [s for s in SENSORS if not var[s] > self.threshold]
+        n_distinct = (
+            train_raw[list(SENSORS)].groupby(train_norm["regime"].to_numpy()).nunique().max()
+        )
+        few = [s for s in SENSORS if s not in low_var and n_distinct[s] <= self.max_distinct]
+        self.dropped_by_rule_ = {"variance": low_var, "few_distinct": few}
+        self.dropped_ = [s for s in SENSORS if s in low_var or s in few]
+        self.kept_ = [s for s in SENSORS if s not in self.dropped_]
         if not self.kept_:
-            raise ValueError("variance threshold dropped every sensor")
+            raise ValueError("sensor selection dropped every sensor")
         return self
 
 

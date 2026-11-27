@@ -21,7 +21,14 @@ from omegaconf import DictConfig
 from aerosentinel.metrics import point_metrics
 from aerosentinel.models import build_model
 from aerosentinel.models.base import predict_windows
-from aerosentinel.runs import CONFIG_DIR, cfg_dict, config_hash, prepare_dev_from_cfg, run_dir
+from aerosentinel.runs import (
+    CONFIG_DIR,
+    cfg_dict,
+    config_hash,
+    git_info,
+    prepare_dev_from_cfg,
+    run_dir,
+)
 from aerosentinel.utils import get_paths, seed_everything
 
 
@@ -81,12 +88,14 @@ def train(cfg: DictConfig) -> Path:
         "n_val_windows": len(dev.val.index),
         "channels": dev.pre.channels,
         "sensors_dropped": dev.pre.selector.dropped_,
+        "sensors_dropped_by_rule": dev.pre.selector.dropped_by_rule_,
         "input_names": model.input_names(),
         "val": val_metrics,
         "fit_info": fit_info,
         "n_params": model.n_params(),
         "train_seconds": train_seconds,
         "threads": os.environ.get("OMP_NUM_THREADS"),
+        "git": git_info(get_paths().root),
     }
     (rd / "train_meta.json").write_text(json.dumps(meta, indent=2))
     _log_mlflow(cfg, meta)

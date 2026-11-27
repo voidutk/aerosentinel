@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
-from aerosentinel.data.cmapss import RegimeNormalizer, load_test, load_train
+from aerosentinel.data.cmapss import RegimeNormalizer, load_train
 from aerosentinel.data.download import read_checksums, sha256_file
 from aerosentinel.utils import get_paths
 
@@ -32,10 +34,18 @@ def test_checksums_match_files() -> None:
 
 @pytest.mark.parametrize("subset", list(UNITS))
 def test_unit_counts(subset: str) -> None:
-    train = load_train(RAW, subset)
-    test, rul = load_test(RAW, subset)
-    assert (train["unit"].nunique(), test["unit"].nunique()) == UNITS[subset]
-    assert len(rul) == UNITS[subset][1]
+    """Train units from the file; test units from the results JSONs.
+
+    Test files are read only by ``aerosentinel.evaluate`` (which checks ids are 1..N and
+    match the RUL file), so the test-unit count is taken from what it wrote.
+    """
+    assert load_train(RAW, subset)["unit"].nunique() == UNITS[subset][0]
+    docs = list(get_paths().results.glob(f"cmapss-{subset.lower()}_*.json"))
+    assert docs, f"no results JSONs for {subset}"
+    for p in docs:
+        doc = json.loads(p.read_text())
+        assert doc["n_train_units"] + doc["n_val_units"] == UNITS[subset][0]
+        assert doc["n_test_units"] == UNITS[subset][1]
 
 
 @pytest.mark.parametrize("subset", ["FD002", "FD004"])

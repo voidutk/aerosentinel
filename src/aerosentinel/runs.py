@@ -54,11 +54,16 @@ def prepare_dev_from_cfg(cfg: DictConfig) -> DevData:
         split_seed=int(cfg.split_seed),
         n_regimes=int(d.n_regimes),
         var_threshold=float(d.var_threshold),
+        max_distinct=int(d.max_distinct),
     )
 
 
 def git_info(root: Path) -> dict[str, Any]:
-    """Current commit SHA and whether the working tree had uncommitted changes."""
+    """Current commit SHA and whether tracked files had uncommitted changes.
+
+    Untracked files (logs, scratch output) do not count as dirty: they cannot change what
+    the committed code computes.
+    """
 
     def _git(*args: str) -> str:
         try:
@@ -68,4 +73,7 @@ def git_info(root: Path) -> dict[str, Any]:
         except (OSError, subprocess.CalledProcessError):
             return ""
 
-    return {"sha": _git("rev-parse", "HEAD") or None, "dirty": bool(_git("status", "--porcelain"))}
+    return {
+        "sha": _git("rev-parse", "HEAD") or None,
+        "dirty": bool(_git("status", "--porcelain", "--untracked-files=no")),
+    }
