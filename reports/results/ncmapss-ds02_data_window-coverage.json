@@ -1,0 +1,273 @@
+{
+  "experiment": "ncmapss-ds02_data_window-coverage",
+  "dataset": "ncmapss-ds02",
+  "model": "data",
+  "setting": "window-coverage",
+  "written_by": "scripts/window_coverage.py",
+  "units": [
+    2,
+    5,
+    10,
+    16,
+    18,
+    20
+  ],
+  "split": "dev",
+  "mask_params": {
+    "min_len": 512,
+    "std_max": 50.0,
+    "med_win": 31,
+    "stab_win": 61,
+    "high_frac": 0.5,
+    "min_span_ft": 500.0
+  },
+  "note": "1 native sample = 1 s. A cycle counts if its segment (whole flight or its cruise run) has at least T model samples after keeping every k-th row.",
+  "rule": "largest T in [64, 128, 256] with >= 95% of dev cycles having >= 1 window in cruise_only at downsample 10",
+  "chosen_window_ds10": 64,
+  "grid": [
+    {
+      "setting": "full_flight",
+      "downsample": 1,
+      "window": 64,
+      "span_minutes": 1.0666666666666667,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 446,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 1,
+      "window": 64,
+      "span_minutes": 1.0666666666666667,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 416,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 1,
+      "window": 128,
+      "span_minutes": 2.1333333333333333,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 446,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 1,
+      "window": 128,
+      "span_minutes": 2.1333333333333333,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 416,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 1,
+      "window": 256,
+      "span_minutes": 4.266666666666667,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 446,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 1,
+      "window": 256,
+      "span_minutes": 4.266666666666667,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 416,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 10,
+      "window": 64,
+      "span_minutes": 10.666666666666666,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 446,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 10,
+      "window": 64,
+      "span_minutes": 10.666666666666666,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 416,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 10,
+      "window": 128,
+      "span_minutes": 21.333333333333332,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 446,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 10,
+      "window": 128,
+      "span_minutes": 21.333333333333332,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 416,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 10,
+      "window": 256,
+      "span_minutes": 42.666666666666664,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 446,
+      "fraction": 1.0
+    },
+    {
+      "setting": "full_flight",
+      "downsample": 10,
+      "window": 256,
+      "span_minutes": 42.666666666666664,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 416,
+      "fraction": 1.0
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 1,
+      "window": 64,
+      "span_minutes": 1.0666666666666667,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 432,
+      "fraction": 0.968609865470852
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 1,
+      "window": 64,
+      "span_minutes": 1.0666666666666667,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 402,
+      "fraction": 0.9663461538461539
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 1,
+      "window": 128,
+      "span_minutes": 2.1333333333333333,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 432,
+      "fraction": 0.968609865470852
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 1,
+      "window": 128,
+      "span_minutes": 2.1333333333333333,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 402,
+      "fraction": 0.9663461538461539
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 1,
+      "window": 256,
+      "span_minutes": 4.266666666666667,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 432,
+      "fraction": 0.968609865470852
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 1,
+      "window": 256,
+      "span_minutes": 4.266666666666667,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 402,
+      "fraction": 0.9663461538461539
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 10,
+      "window": 64,
+      "span_minutes": 10.666666666666666,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 430,
+      "fraction": 0.9641255605381166
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 10,
+      "window": 64,
+      "span_minutes": 10.666666666666666,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 400,
+      "fraction": 0.9615384615384616
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 10,
+      "window": 128,
+      "span_minutes": 21.333333333333332,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 416,
+      "fraction": 0.9327354260089686
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 10,
+      "window": 128,
+      "span_minutes": 21.333333333333332,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 388,
+      "fraction": 0.9326923076923077
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 10,
+      "window": 256,
+      "span_minutes": 42.666666666666664,
+      "min_cycle": 1,
+      "n_cycles": 446,
+      "n_with_window": 318,
+      "fraction": 0.7130044843049327
+    },
+    {
+      "setting": "cruise_only",
+      "downsample": 10,
+      "window": 256,
+      "span_minutes": 42.666666666666664,
+      "min_cycle": 6,
+      "n_cycles": 416,
+      "n_with_window": 296,
+      "fraction": 0.7115384615384616
+    }
+  ],
+  "git": {
+    "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+    "dirty": true
+  }
+}

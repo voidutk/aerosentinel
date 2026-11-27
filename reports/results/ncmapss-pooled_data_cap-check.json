@@ -1,0 +1,860 @@
+{
+  "experiment": "ncmapss-pooled_data_cap-check",
+  "dataset": "ncmapss-pooled",
+  "model": "data",
+  "setting": "cap-check",
+  "written_by": "scripts/check_caps.py",
+  "spec_caps_eta5": {
+    "DS01": 38,
+    "DS02": 34,
+    "DS03": 34,
+    "DS04": 43,
+    "DS05": 38,
+    "DS06": 41,
+    "DS07": 39,
+    "DS08a": 34,
+    "DS08c": 28
+  },
+  "hs_derived": {
+    "definition": "min over dev units of the number of cycles with hs == 0 (abnormal-degradation length; = RUL at the hs onset cycle + 1). Dev units only.",
+    "caps": {
+      "DS01": 57,
+      "DS02": 48,
+      "DS03": 36,
+      "DS04": 54,
+      "DS05": 40,
+      "DS06": 42,
+      "DS07": 44
+    },
+    "per_dataset": {
+      "DS01": {
+        "source": "N-CMAPSS_DS01-005.h5",
+        "n_dev_units": 6,
+        "per_unit": {
+          "1": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 100,
+            "last_cycle": 100,
+            "rul_at_first_cycle": 99,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 37,
+            "rul_at_onset": 63,
+            "n_abnormal_cycles": 64,
+            "hs_monotone": true
+          },
+          "2": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 75,
+            "last_cycle": 75,
+            "rul_at_first_cycle": 74,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 19,
+            "rul_at_onset": 56,
+            "n_abnormal_cycles": 57,
+            "hs_monotone": true
+          },
+          "3": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 100,
+            "last_cycle": 100,
+            "rul_at_first_cycle": 99,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 26,
+            "rul_at_onset": 74,
+            "n_abnormal_cycles": 75,
+            "hs_monotone": true
+          },
+          "4": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 95,
+            "last_cycle": 95,
+            "rul_at_first_cycle": 94,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 38,
+            "rul_at_onset": 57,
+            "n_abnormal_cycles": 58,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 89,
+            "last_cycle": 89,
+            "rul_at_first_cycle": 88,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 19,
+            "rul_at_onset": 70,
+            "n_abnormal_cycles": 71,
+            "hs_monotone": true
+          },
+          "6": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 94,
+            "last_cycle": 94,
+            "rul_at_first_cycle": 93,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 25,
+            "rul_at_onset": 69,
+            "n_abnormal_cycles": 70,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 57,
+        "argmin_unit": 2,
+        "min_rul_at_onset": 56,
+        "all_hs_monotone": true
+      },
+      "DS02": {
+        "source": "N-CMAPSS_DS02-006.h5",
+        "n_dev_units": 6,
+        "per_unit": {
+          "2": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 75,
+            "last_cycle": 75,
+            "rul_at_first_cycle": 74,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 58,
+            "n_abnormal_cycles": 59,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 89,
+            "last_cycle": 89,
+            "rul_at_first_cycle": 88,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 72,
+            "n_abnormal_cycles": 73,
+            "hs_monotone": true
+          },
+          "10": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 82,
+            "last_cycle": 82,
+            "rul_at_first_cycle": 81,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 65,
+            "n_abnormal_cycles": 66,
+            "hs_monotone": true
+          },
+          "16": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 63,
+            "last_cycle": 63,
+            "rul_at_first_cycle": 62,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 16,
+            "rul_at_onset": 47,
+            "n_abnormal_cycles": 48,
+            "hs_monotone": true
+          },
+          "18": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 71,
+            "last_cycle": 71,
+            "rul_at_first_cycle": 70,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 54,
+            "n_abnormal_cycles": 55,
+            "hs_monotone": true
+          },
+          "20": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 66,
+            "last_cycle": 66,
+            "rul_at_first_cycle": 65,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 49,
+            "n_abnormal_cycles": 50,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 48,
+        "argmin_unit": 16,
+        "min_rul_at_onset": 47,
+        "all_hs_monotone": true
+      },
+      "DS03": {
+        "source": "N-CMAPSS_DS03-012.h5",
+        "n_dev_units": 9,
+        "per_unit": {
+          "1": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 72,
+            "last_cycle": 72,
+            "rul_at_first_cycle": 71,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 37,
+            "rul_at_onset": 35,
+            "n_abnormal_cycles": 36,
+            "hs_monotone": true
+          },
+          "2": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 73,
+            "last_cycle": 73,
+            "rul_at_first_cycle": 72,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 24,
+            "rul_at_onset": 49,
+            "n_abnormal_cycles": 50,
+            "hs_monotone": true
+          },
+          "3": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 67,
+            "last_cycle": 67,
+            "rul_at_first_cycle": 66,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 25,
+            "rul_at_onset": 42,
+            "n_abnormal_cycles": 43,
+            "hs_monotone": true
+          },
+          "4": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 60,
+            "last_cycle": 60,
+            "rul_at_first_cycle": 59,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 24,
+            "rul_at_onset": 36,
+            "n_abnormal_cycles": 37,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 93,
+            "last_cycle": 93,
+            "rul_at_first_cycle": 92,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 38,
+            "rul_at_onset": 55,
+            "n_abnormal_cycles": 56,
+            "hs_monotone": true
+          },
+          "6": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 63,
+            "last_cycle": 63,
+            "rul_at_first_cycle": 62,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 18,
+            "rul_at_onset": 45,
+            "n_abnormal_cycles": 46,
+            "hs_monotone": true
+          },
+          "7": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 80,
+            "last_cycle": 80,
+            "rul_at_first_cycle": 79,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 25,
+            "rul_at_onset": 55,
+            "n_abnormal_cycles": 56,
+            "hs_monotone": true
+          },
+          "8": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 71,
+            "last_cycle": 71,
+            "rul_at_first_cycle": 70,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 18,
+            "rul_at_onset": 53,
+            "n_abnormal_cycles": 54,
+            "hs_monotone": true
+          },
+          "9": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 84,
+            "last_cycle": 84,
+            "rul_at_first_cycle": 83,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 37,
+            "rul_at_onset": 47,
+            "n_abnormal_cycles": 48,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 36,
+        "argmin_unit": 1,
+        "min_rul_at_onset": 35,
+        "all_hs_monotone": true
+      },
+      "DS04": {
+        "source": "N-CMAPSS_DS04.h5",
+        "n_dev_units": 6,
+        "per_unit": {
+          "1": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 87,
+            "last_cycle": 87,
+            "rul_at_first_cycle": 86,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 22,
+            "rul_at_onset": 65,
+            "n_abnormal_cycles": 66,
+            "hs_monotone": true
+          },
+          "2": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 73,
+            "last_cycle": 73,
+            "rul_at_first_cycle": 72,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 56,
+            "n_abnormal_cycles": 57,
+            "hs_monotone": true
+          },
+          "3": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 100,
+            "last_cycle": 100,
+            "rul_at_first_cycle": 99,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 22,
+            "rul_at_onset": 78,
+            "n_abnormal_cycles": 79,
+            "hs_monotone": true
+          },
+          "4": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 69,
+            "last_cycle": 69,
+            "rul_at_first_cycle": 68,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 16,
+            "rul_at_onset": 53,
+            "n_abnormal_cycles": 54,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 100,
+            "last_cycle": 100,
+            "rul_at_first_cycle": 99,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 83,
+            "n_abnormal_cycles": 84,
+            "hs_monotone": true
+          },
+          "6": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 83,
+            "last_cycle": 83,
+            "rul_at_first_cycle": 82,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 66,
+            "n_abnormal_cycles": 67,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 54,
+        "argmin_unit": 4,
+        "min_rul_at_onset": 53,
+        "all_hs_monotone": true
+      },
+      "DS05": {
+        "source": "N-CMAPSS_DS05.h5",
+        "n_dev_units": 6,
+        "per_unit": {
+          "1": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 80,
+            "last_cycle": 80,
+            "rul_at_first_cycle": 79,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 24,
+            "rul_at_onset": 56,
+            "n_abnormal_cycles": 57,
+            "hs_monotone": true
+          },
+          "2": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 80,
+            "last_cycle": 80,
+            "rul_at_first_cycle": 79,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 19,
+            "rul_at_onset": 61,
+            "n_abnormal_cycles": 62,
+            "hs_monotone": true
+          },
+          "3": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 65,
+            "last_cycle": 65,
+            "rul_at_first_cycle": 64,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 26,
+            "rul_at_onset": 39,
+            "n_abnormal_cycles": 40,
+            "hs_monotone": true
+          },
+          "4": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 99,
+            "last_cycle": 99,
+            "rul_at_first_cycle": 98,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 36,
+            "rul_at_onset": 63,
+            "n_abnormal_cycles": 64,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 100,
+            "last_cycle": 100,
+            "rul_at_first_cycle": 99,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 36,
+            "rul_at_onset": 64,
+            "n_abnormal_cycles": 65,
+            "hs_monotone": true
+          },
+          "6": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 67,
+            "last_cycle": 67,
+            "rul_at_first_cycle": 66,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 18,
+            "rul_at_onset": 49,
+            "n_abnormal_cycles": 50,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 40,
+        "argmin_unit": 3,
+        "min_rul_at_onset": 39,
+        "all_hs_monotone": true
+      },
+      "DS06": {
+        "source": "N-CMAPSS_DS06.h5",
+        "n_dev_units": 6,
+        "per_unit": {
+          "1": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 78,
+            "last_cycle": 78,
+            "rul_at_first_cycle": 77,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 23,
+            "rul_at_onset": 55,
+            "n_abnormal_cycles": 56,
+            "hs_monotone": true
+          },
+          "2": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 78,
+            "last_cycle": 78,
+            "rul_at_first_cycle": 77,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 61,
+            "n_abnormal_cycles": 62,
+            "hs_monotone": true
+          },
+          "3": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 65,
+            "last_cycle": 65,
+            "rul_at_first_cycle": 64,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 24,
+            "rul_at_onset": 41,
+            "n_abnormal_cycles": 42,
+            "hs_monotone": true
+          },
+          "4": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 87,
+            "last_cycle": 87,
+            "rul_at_first_cycle": 86,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 33,
+            "rul_at_onset": 54,
+            "n_abnormal_cycles": 55,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 99,
+            "last_cycle": 99,
+            "rul_at_first_cycle": 98,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 33,
+            "rul_at_onset": 66,
+            "n_abnormal_cycles": 67,
+            "hs_monotone": true
+          },
+          "6": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 68,
+            "last_cycle": 68,
+            "rul_at_first_cycle": 67,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 17,
+            "rul_at_onset": 51,
+            "n_abnormal_cycles": 52,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 42,
+        "argmin_unit": 3,
+        "min_rul_at_onset": 41,
+        "all_hs_monotone": true
+      },
+      "DS07": {
+        "source": "N-CMAPSS_DS07.h5",
+        "n_dev_units": 6,
+        "per_unit": {
+          "1": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 67,
+            "last_cycle": 67,
+            "rul_at_first_cycle": 66,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 24,
+            "rul_at_onset": 43,
+            "n_abnormal_cycles": 44,
+            "hs_monotone": true
+          },
+          "2": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 85,
+            "last_cycle": 85,
+            "rul_at_first_cycle": 84,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 19,
+            "rul_at_onset": 66,
+            "n_abnormal_cycles": 67,
+            "hs_monotone": true
+          },
+          "3": {
+            "Fc": [
+              2
+            ],
+            "n_cycles": 78,
+            "last_cycle": 78,
+            "rul_at_first_cycle": 77,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 26,
+            "rul_at_onset": 52,
+            "n_abnormal_cycles": 53,
+            "hs_monotone": true
+          },
+          "4": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 79,
+            "last_cycle": 79,
+            "rul_at_first_cycle": 78,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 36,
+            "rul_at_onset": 43,
+            "n_abnormal_cycles": 44,
+            "hs_monotone": true
+          },
+          "5": {
+            "Fc": [
+              1
+            ],
+            "n_cycles": 85,
+            "last_cycle": 85,
+            "rul_at_first_cycle": 84,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 36,
+            "rul_at_onset": 49,
+            "n_abnormal_cycles": 50,
+            "hs_monotone": true
+          },
+          "6": {
+            "Fc": [
+              3
+            ],
+            "n_cycles": 74,
+            "last_cycle": 74,
+            "rul_at_first_cycle": 73,
+            "rul_at_last_cycle": 0,
+            "hs_onset_cycle": 19,
+            "rul_at_onset": 55,
+            "n_abnormal_cycles": 56,
+            "hs_monotone": true
+          }
+        },
+        "min_abnormal_cycles": 44,
+        "argmin_unit": 1,
+        "min_rul_at_onset": 43,
+        "all_hs_monotone": true
+      }
+    }
+  },
+  "git": {
+    "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+    "dirty": true
+  },
+  "cruisebench": {
+    "reachable": true,
+    "repo": "https://github.com/NostalgiaJohn/CruiseBench",
+    "commit": "ef26d40fe06b75ce8f0d0159a05bbc5cb1be298a",
+    "caps_by_eta": {
+      "eta0": {
+        "caps": {
+          "DS01": 46,
+          "DS02": 41,
+          "DS03": 41,
+          "DS04": 52,
+          "DS05": 46,
+          "DS06": 50,
+          "DS07": 47,
+          "DS08a": 40,
+          "DS08c": 33
+        },
+        "source": "scripts/run_baseline_grid.sh:16"
+      },
+      "eta5": {
+        "caps": {
+          "DS01": 38,
+          "DS02": 34,
+          "DS03": 34,
+          "DS04": 43,
+          "DS05": 38,
+          "DS06": 41,
+          "DS07": 39,
+          "DS08a": 34,
+          "DS08c": 28
+        },
+        "source": "scripts/run_baseline_grid.sh:20"
+      },
+      "eta10": {
+        "caps": {
+          "DS01": 34,
+          "DS02": 31,
+          "DS03": 31,
+          "DS04": 38,
+          "DS05": 34,
+          "DS06": 37,
+          "DS07": 35,
+          "DS08a": 30,
+          "DS08c": 25
+        },
+        "source": "scripts/run_baseline_grid.sh:24"
+      }
+    },
+    "eta5_matches_spec": {
+      "DS01": true,
+      "DS02": true,
+      "DS03": true,
+      "DS04": true,
+      "DS05": true,
+      "DS06": true,
+      "DS07": true,
+      "DS08a": true,
+      "DS08c": true
+    },
+    "eta5_within_hs_min_abnormal_length": {
+      "DS01": true,
+      "DS02": true,
+      "DS03": true,
+      "DS04": true,
+      "DS05": true,
+      "DS06": true,
+      "DS07": true
+    },
+    "eta0_equals_hs_derived_dev_min": {
+      "DS01": false,
+      "DS02": false,
+      "DS03": false,
+      "DS04": false,
+      "DS05": false,
+      "DS06": false,
+      "DS07": false
+    },
+    "eta_definition_found": false,
+    "eta_definition_searched": [
+      {
+        "path": "main checkout",
+        "commit": "ef26d40fe06b75ce8f0d0159a05bbc5cb1be298a"
+      },
+      {
+        "branch": "full-accelerate-tensorboard",
+        "commit": "598d0622f7d01e9ffd7d7580977bb2a3d877a538"
+      }
+    ],
+    "eta_definition_search_hits": [],
+    "note": "The repo lists cap values per \u03b7 (0, 5, 10 %) but does not state how \u03b7 maps to a cap, so the \u03b7=5% caps cannot be recomputed from hs."
+  },
+  "cap_source": "hs-derived",
+  "cap_source_reason": "CruiseBench's \u03b7=5% caps match SPEC but its cap definition is not stated (ambiguous), so per the agreed rule the hs-derived dev-unit caps are used",
+  "mask_comparison": {
+    "ours": {
+      "params": {
+        "min_len": 512,
+        "std_max": 50.0,
+        "med_win": 31,
+        "stab_win": 61,
+        "high_frac": 0.5,
+        "min_span_ft": 500.0
+      },
+      "module": "aerosentinel.data.masks"
+    },
+    "cruisebench": "dataset/cruise_mask/common_altitude_cruise_mask.h5 (released mask; inclusive cycle-local intervals, converted to half-open)",
+    "dataset": "DS02 dev",
+    "n_flights_compared": 446,
+    "n_flights_missing_in_cruisebench": 0,
+    "accepted_ours": 432,
+    "accepted_cruisebench": 444,
+    "accepted_both": 432,
+    "iou": {
+      "mean": 0.9511424024306967,
+      "median": 0.9870309050772627,
+      "p10": 0.9713993871297242,
+      "min": 0.0,
+      "share_ge_0.9": 0.9573991031390134
+    },
+    "mean_run_length_ours": 4096.2037037037035,
+    "mean_run_length_cruisebench": 4107.349537037037,
+    "worst_flights": [
+      {
+        "unit": 2,
+        "cycle": 21,
+        "n_samples": 7694,
+        "ours": null,
+        "cruisebench": [
+          5328,
+          5867
+        ],
+        "iou": 0.0
+      },
+      {
+        "unit": 2,
+        "cycle": 58,
+        "n_samples": 8225,
+        "ours": null,
+        "cruisebench": [
+          1790,
+          2680
+        ],
+        "iou": 0.0
+      },
+      {
+        "unit": 5,
+        "cycle": 38,
+        "n_samples": 7694,
+        "ours": null,
+        "cruisebench": [
+          5328,
+          5867
+        ],
+        "iou": 0.0
+      }
+    ],
+    "figure": "reports/figures/ncmapss_mask_vs_cruisebench.png"
+  },
+  "stop": false,
+  "stop_reasons": [],
+  "caps_used": {
+    "DS01": 57,
+    "DS02": 48,
+    "DS03": 36,
+    "DS04": 54,
+    "DS05": 40,
+    "DS06": 42,
+    "DS07": 44
+  }
+}

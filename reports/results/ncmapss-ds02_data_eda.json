@@ -1,0 +1,185 @@
+{
+  "experiment": "ncmapss-ds02_data_eda",
+  "dataset": "ncmapss-ds02",
+  "model": "data",
+  "setting": "eda",
+  "written_by": "scripts/make_eda_figures.py",
+  "flight_profiles": {
+    "1": {
+      "unit": 1,
+      "cycle": 36,
+      "minutes": 63.266666666666666
+    },
+    "2": {
+      "unit": 2,
+      "cycle": 37,
+      "minutes": 130.86666666666667
+    },
+    "3": {
+      "unit": 6,
+      "cycle": 32,
+      "minutes": 314.0833333333333
+    }
+  },
+  "sensors_over_life": {
+    "unit": 2,
+    "onset": 17,
+    "n_cycles": 75
+  },
+  "hs_onset": {
+    "2": {
+      "onset": 17,
+      "last_cycle": 75,
+      "n_abnormal": 59
+    },
+    "5": {
+      "onset": 17,
+      "last_cycle": 89,
+      "n_abnormal": 73
+    },
+    "10": {
+      "onset": 17,
+      "last_cycle": 82,
+      "n_abnormal": 66
+    },
+    "16": {
+      "onset": 16,
+      "last_cycle": 63,
+      "n_abnormal": 48
+    },
+    "18": {
+      "onset": 17,
+      "last_cycle": 71,
+      "n_abnormal": 55
+    },
+    "20": {
+      "onset": 17,
+      "last_cycle": 66,
+      "n_abnormal": 50
+    }
+  },
+  "residual_drift": {
+    "T48": {
+      "2": {
+        "pre_onset_mean": -0.0030686792981048875,
+        "last5_mean": 0.2665225565433502
+      },
+      "5": {
+        "pre_onset_mean": 0.004596278648188507,
+        "last5_mean": 0.34607747197151184
+      },
+      "10": {
+        "pre_onset_mean": 0.004794850875623524,
+        "last5_mean": 0.295048201084137
+      },
+      "16": {
+        "pre_onset_mean": 0.013125341292470694,
+        "last5_mean": 0.30362924337387087
+      },
+      "18": {
+        "pre_onset_mean": 0.011214899745854464,
+        "last5_mean": 0.3636016547679901
+      },
+      "20": {
+        "pre_onset_mean": 0.001532546068483498,
+        "last5_mean": 0.33804636597633364
+      }
+    },
+    "T50": {
+      "2": {
+        "pre_onset_mean": -0.001342489765110341,
+        "last5_mean": 0.39740805327892303
+      },
+      "5": {
+        "pre_onset_mean": 0.0059513889930465,
+        "last5_mean": 0.49526946544647216
+      },
+      "10": {
+        "pre_onset_mean": 0.011251608049497009,
+        "last5_mean": 0.4596281349658966
+      },
+      "16": {
+        "pre_onset_mean": 0.00849840701557696,
+        "last5_mean": 0.41581726670265196
+      },
+      "18": {
+        "pre_onset_mean": 0.016233692855828187,
+        "last5_mean": 0.5950415253639221
+      },
+      "20": {
+        "pre_onset_mean": 0.005926315335091204,
+        "last5_mean": 0.6645478010177612
+      }
+    },
+    "P50": {
+      "2": {
+        "pre_onset_mean": 0.003800652192812105,
+        "last5_mean": -0.005400867259595543
+      },
+      "5": {
+        "pre_onset_mean": 0.0055190816982014276,
+        "last5_mean": -0.003962585423141718
+      },
+      "10": {
+        "pre_onset_mean": 0.007679527833533939,
+        "last5_mean": 0.00584518639370799
+      },
+      "16": {
+        "pre_onset_mean": 0.003096086421282962,
+        "last5_mean": -0.0019616174511611463
+      },
+      "18": {
+        "pre_onset_mean": 0.0018825106698469344,
+        "last5_mean": 0.013363273069262504
+      },
+      "20": {
+        "pre_onset_mean": 0.016595661211613332,
+        "last5_mean": 0.0291363462805748
+      }
+    },
+    "Wf": {
+      "2": {
+        "pre_onset_mean": 0.001164982243525711,
+        "last5_mean": 0.04842329025268555
+      },
+      "5": {
+        "pre_onset_mean": 0.0005972214064306834,
+        "last5_mean": 0.047875431925058366
+      },
+      "10": {
+        "pre_onset_mean": 0.005213576706591993,
+        "last5_mean": 0.061361029744148254
+      },
+      "16": {
+        "pre_onset_mean": 0.01280543633038178,
+        "last5_mean": 0.05495291873812676
+      },
+      "18": {
+        "pre_onset_mean": -0.0002156382172622464,
+        "last5_mean": 0.08129898235201835
+      },
+      "20": {
+        "pre_onset_mean": 0.013394671061541885,
+        "last5_mean": 0.12078347951173782
+      }
+    }
+  },
+  "altitude": {
+    "dev units (pooled)": {
+      "median_ft": 22996.0,
+      "p95_ft": 30991.0
+    },
+    "test unit 14": {
+      "median_ft": 11418.5,
+      "p95_ft": 14757.0
+    },
+    "test unit 15": {
+      "median_ft": 18922.0,
+      "p95_ft": 25244.80078125
+    }
+  },
+  "git": {
+    "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+    "dirty": true
+  }
+}
