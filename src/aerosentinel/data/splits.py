@@ -65,3 +65,44 @@ def unit_kfold(
         train = np.concatenate([f for j, f in enumerate(folds) if j != i])
         out.append((sorted(int(x) for x in train), sorted(int(x) for x in held)))
     return out
+
+
+def rotation_folds(
+    units: Sequence[int], n_val: int = 1, n_calib: int = 1, seed: int = 0
+) -> list[tuple[list[int], list[int], list[int]]]:
+    """Leave-unit-out rotation into (train, val, calib) folds (SPEC §1.3 item 6).
+
+    Units are shuffled once and split into ``n_folds = n_units // n_val`` groups. Fold ``i``
+    validates on group ``i`` and calibrates on group ``i + 1`` (cyclically), so every unit is
+    a validation unit exactly once and a calibration unit exactly once, and calibration
+    units never train or early-stop that fold's model (their predictions are out-of-fold).
+    For DS02's 6 dev units the defaults give 6 folds of 4 train / 1 val / 1 calib.
+
+    Parameters
+    ----------
+    units : sequence of int
+        Unique dev unit ids.
+    n_val, n_calib : int, default 1
+        Units per validation / calibration group (must be equal; one group size).
+    seed : int, default 0
+        Shuffle seed (the split seed, independent of model seeds).
+
+    Returns
+    -------
+    list of (train_units, val_units, calib_units)
+        One triple per fold, each sorted.
+    """
+    if n_val != n_calib:
+        raise ValueError("n_val and n_calib must be equal (one group size)")
+    u = np.array(sorted(set(units)), dtype=np.int64)
+    if len(u) % n_val or len(u) // n_val < 3:
+        raise ValueError(f"{len(u)} units cannot form >= 3 groups of {n_val}")
+    perm = u[np.random.default_rng(seed).permutation(len(u))]
+    groups = [perm[i : i + n_val] for i in range(0, len(u), n_val)]
+    out = []
+    for i in range(len(groups)):
+        val, cal = groups[i], groups[(i + 1) % len(groups)]
+        held = set(val.tolist()) | set(cal.tolist())
+        train = [int(x) for x in u if int(x) not in held]
+        out.append((train, sorted(int(x) for x in val), sorted(int(x) for x in cal)))
+    return out

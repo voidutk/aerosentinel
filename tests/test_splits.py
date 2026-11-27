@@ -58,3 +58,30 @@ def test_prepared_splits_are_unit_disjoint(synthetic_root: Path) -> None:
         lengths = np.array([len(a) for a in data.arrays])
         assert (idx.start >= 0).all()
         assert (idx.end < lengths[idx.segment]).all()
+
+
+def test_rotation_folds_ds02_shape_and_coverage() -> None:
+    from aerosentinel.data.splits import rotation_folds
+
+    units = [2, 5, 10, 16, 18, 20]
+    folds = rotation_folds(units, seed=0)
+    assert len(folds) == 6
+    vals, cals = [], []
+    for train, val, cal in folds:
+        assert len(train) == 4 and len(val) == 1 and len(cal) == 1
+        assert set(train).isdisjoint(val) and set(train).isdisjoint(cal)
+        assert set(val).isdisjoint(cal)
+        assert sorted(train + val + cal) == units
+        vals += val
+        cals += cal
+    assert sorted(vals) == units and sorted(cals) == units  # each held out exactly once
+    assert rotation_folds(units, seed=0) == folds  # deterministic
+
+
+def test_rotation_folds_rejects_too_few_units() -> None:
+    import pytest
+
+    from aerosentinel.data.splits import rotation_folds
+
+    with pytest.raises(ValueError):
+        rotation_folds([1, 2])

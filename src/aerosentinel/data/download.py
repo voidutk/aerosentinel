@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import hashlib
 import io
+import re
 import shutil
 import sys
 import urllib.request
 import zipfile
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 
 from aerosentinel.utils import Paths, get_paths
@@ -234,3 +235,217 @@ def download_cmapss(paths: Paths | None = None, *, url: str = CMAPSS_URL) -> lis
         status = record_checksum(paths.checksums, rel, sha256_file(f), f.stat().st_size)
         print(f"{status:9s} {rel}", file=sys.stderr)
     return files
+
+
+# --- N-CMAPSS (SPEC §1.2) -----------------------------------------------------------------
+
+NCMAPSS_URL = (
+    "https://phm-datasets.s3.amazonaws.com/NASA/"
+    "17.+Turbofan+Engine+Degradation+Simulation+Data+Set+2.zip"
+)
+NCMAPSS_ARCHIVE_NAME = "ncmapss.zip"
+NCMAPSS_INNER_ZIP = "data_set.zip"
+#: Subsets extracted: DS02 for modelling, DS01–DS07 pooled for conformal (SPEC §6).
+NCMAPSS_PATTERN = re.compile(r"^N-CMAPSS_DS0[1-7](-\d+)?\.h5$")
+NCMAPSS_N_FILES = 7
+MIN_FREE_BYTES = 50 * 10**9
+
+
+class DownloadSizeError(RuntimeError):
+    """A local archive's size does not match the server's Content-Length."""
+
+
+def head_content_length(url: str, *, timeout: float = 60.0) -> int:
+    """Return the ``Content-Length`` of ``url`` from an HTTP HEAD request.
+
+    Parameters
+    ----------
+    url : str
+        HTTP(S) URL.
+    timeout : float, default 60
+        Socket timeout in seconds.
+
+    Returns
+    -------
+    int
+        Size in bytes announced by the server.
+    """
+    req = urllib.request.Request(
+        url, method="HEAD", headers={"User-Agent": "aerosentinel-downloader"}
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:  # noqa: S310 (fixed https URL)
+        length = resp.headers.get("Content-Length")
+    if length is None:
+        raise DownloadSizeError(f"{url}: no Content-Length in HEAD response")
+    return int(length)
+
+
+def check_free_disk(path: Path, min_free: int = MIN_FREE_BYTES) -> int:
+    """Raise ``OSError`` if the filesystem holding ``path`` has less than ``min_free`` bytes.
+
+    Returns
+    -------
+    int
+        Free bytes.
+    """
+    probe = path
+    while not probe.exists():
+        probe = probe.parent
+    free = shutil.disk_usage(probe).free
+    if free < min_free:
+        raise OSError(f"only {free / 1e9:.1f} GB free at {probe}; need >= {min_free / 1e9:.0f} GB")
+    return free
+
+
+def _basename(name: str) -> str:
+    return name.rstrip("/").rsplit("/", 1)[-1]
+
+
+def stream_extract_nested(
+    outer_path: Path,
+    inner_basename: str,
+    pattern: re.Pattern[str],
+    out_dir: Path,
+    *,
+    log: Callable[[str], None] = print,
+) -> list[tuple[Path, str, int]]:
+    """Extract members matching ``pattern`` from a zip nested inside ``outer_path``.
+
+    The inner zip is never written to disk: it is opened as a (seekable) stream of the outer
+    member. Members are extracted in ``header_offset`` order, so the inflater only ever seeks
+    forward after reading the central directory (about two sequential passes). Each member is
+    written to a ``.part`` file while its SHA256 is computed, its CRC is checked by
+    :mod:`zipfile` at end of stream, and only then is it renamed into place.
+
+    Parameters
+    ----------
+    outer_path : pathlib.Path
+        Outer archive.
+    inner_basename : str
+        Basename of the nested zip member (e.g. ``"data_set.zip"``).
+    pattern : re.Pattern
+        Regex on member basenames selecting the files to extract.
+    out_dir : pathlib.Path
+        Flat destination directory.
+    log : callable, default print
+        Progress sink.
+
+    Returns
+    -------
+    list of (path, sha256, size)
+        Extracted files in extraction order.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out: list[tuple[Path, str, int]] = []
+    with zipfile.ZipFile(outer_path) as outer:
+        inner_name = find_member(outer.namelist(), inner_basename)
+        with outer.open(inner_name) as inner_stream, zipfile.ZipFile(inner_stream) as inner:
+            infos = inner.infolist()
+            log(f"inner {inner_basename}: {len(infos)} members")
+            for i in infos:
+                log(f"  {i.file_size:>14d}  {i.compress_size:>14d}  {i.filename}")
+            wanted = sorted(
+                (i for i in infos if pattern.match(_basename(i.filename))),
+                key=lambda i: i.header_offset,
+            )
+            for info in wanted:
+                target = out_dir / _basename(info.filename)
+                part = target.with_suffix(target.suffix + ".part")
+                h = hashlib.sha256()
+                size = 0
+                with inner.open(info) as src, part.open("wb") as dst:
+                    while chunk := src.read(_CHUNK * 8):
+                        h.update(chunk)
+                        dst.write(chunk)
+                        size += len(chunk)
+                if size != info.file_size:
+                    raise zipfile.BadZipFile(f"{info.filename}: wrote {size} != {info.file_size}")
+                part.rename(target)
+                log(f"extracted {target.name} ({size} B, CRC ok)")
+                out.append((target, h.hexdigest(), size))
+    return out
+
+
+def download_ncmapss(
+    paths: Paths | None = None,
+    *,
+    url: str = NCMAPSS_URL,
+    keep_zip: bool = False,
+    check_remote: bool = True,
+    log: Callable[[str], None] = print,
+) -> list[Path]:
+    """Download N-CMAPSS, stream-extract DS01–DS07 and record checksums (SPEC §1.2).
+
+    Steps: HEAD Content-Length, free-disk check, resumable download (skipped when the local
+    zip already has the announced size), stream extraction of the ``.h5`` files through the
+    nested ``data_set.zip``, SHA256 + size of the zip and each ``.h5`` into
+    ``configs/data_checksums.txt``, then deletion of the zip unless ``keep_zip``.
+
+    Parameters
+    ----------
+    paths : Paths or None
+        Project paths (defaults to :func:`aerosentinel.utils.get_paths`).
+    url : str
+        Archive URL.
+    keep_zip : bool, default False
+        Keep the archive after extraction (deviation from SPEC §1.2 step 6).
+    check_remote : bool, default True
+        Issue the HEAD request (tests pass False).
+    log : callable, default print
+        Progress sink.
+
+    Returns
+    -------
+    list of pathlib.Path
+        The extracted ``.h5`` files.
+    """
+    paths = paths or get_paths()
+    raw = paths.data_raw / "ncmapss"
+    archive = raw / NCMAPSS_ARCHIVE_NAME
+    known = read_checksums(paths.checksums)
+
+    def rel(p: Path) -> str:
+        return p.relative_to(paths.root).as_posix()
+
+    existing = sorted(p for p in raw.glob("*.h5") if NCMAPSS_PATTERN.match(p.name))
+    if len(existing) == NCMAPSS_N_FILES and all(rel(p) in known for p in existing):
+        for p in existing:
+            status = record_checksum(paths.checksums, rel(p), sha256_file(p), p.stat().st_size)
+            log(f"{status:9s} {rel(p)}")
+        log("all DS01–DS07 .h5 files present and verified; nothing to do")
+        return existing
+
+    if check_remote:
+        length = head_content_length(url)
+        log(f"HEAD Content-Length: {length} B")
+        if archive.is_file() and archive.stat().st_size != length:
+            raise DownloadSizeError(
+                f"{rel(archive)} is {archive.stat().st_size} B but the server announces "
+                f"{length} B; refusing to use it"
+            )
+    free = check_free_disk(raw)
+    log(f"free disk: {free / 1e9:.1f} GB")
+    if archive.is_file():
+        log(f"{rel(archive)} present ({archive.stat().st_size} B); skipping download")
+    else:
+        download_resumable(url, archive)
+    status = record_checksum(
+        paths.checksums, rel(archive), sha256_file(archive), archive.stat().st_size
+    )
+    log(f"{status:9s} {rel(archive)}")
+
+    extracted = stream_extract_nested(archive, NCMAPSS_INNER_ZIP, NCMAPSS_PATTERN, raw, log=log)
+    if len(extracted) != NCMAPSS_N_FILES:
+        raise FileNotFoundError(
+            f"expected {NCMAPSS_N_FILES} DS01–DS07 .h5 files, found "
+            f"{[p.name for p, _, _ in extracted]}"
+        )
+    for p, sha, size in extracted:
+        status = record_checksum(paths.checksums, rel(p), sha, size)
+        log(f"{status:9s} {sha}  {size}  {rel(p)}")
+    if keep_zip:
+        log(f"keeping {rel(archive)} (--keep-zip; deviation from SPEC §1.2 step 6)")
+    else:
+        archive.unlink()
+        log(f"deleted {rel(archive)}")
+    return sorted(p for p, _, _ in extracted)

@@ -17,34 +17,38 @@ F32 = NDArray[np.float32]
 STATS: tuple[str, ...] = ("last", "mean", "std", "slope", "min", "max")
 
 
-def feature_names(channels: list[str]) -> list[str]:
-    """Feature names, ``<sensor>__<stat>`` for each stat and sensor, then ``regime_id``."""
-    return [f"{c}__{s}" for s in STATS for c in channels] + ["regime_id"]
+def feature_names(channels: list[str], regime: bool = True) -> list[str]:
+    """Feature names, ``<channel>__<stat>`` for each stat and channel, then ``regime_id``.
+
+    ``regime=False`` (N-CMAPSS, which has no operating regimes) omits ``regime_id``.
+    """
+    names = [f"{c}__{s}" for s in STATS for c in channels]
+    return [*names, "regime_id"] if regime else names
 
 
-def window_features(x: F32, regime_last: NDArray[np.int64]) -> NDArray[np.float32]:
-    """Per-window last, mean, std, slope (least squares), min, max of each channel + regime.
+def window_features(x: F32, regime_last: NDArray[np.int64] | None = None) -> NDArray[np.float32]:
+    """Per-window last, mean, std, slope (least squares), min, max of each channel (+ regime).
 
     Parameters
     ----------
     x : numpy.ndarray
         Windows [B, T, C].
-    regime_last : numpy.ndarray
-        Regime id at the window end [B].
+    regime_last : numpy.ndarray or None
+        Regime id at the window end [B] (C-MAPSS); None on N-CMAPSS.
 
     Returns
     -------
     numpy.ndarray
-        Features [B, 6C + 1] in :func:`feature_names` order.
+        Features [B, 6C (+ 1)] in :func:`feature_names` order.
     """
     t = np.arange(x.shape[1], dtype=np.float64)
     tc = t - t.mean()
     xd = x.astype(np.float64)
     slope = np.einsum("t,btc->bc", tc, xd - xd.mean(axis=1, keepdims=True)) / (tc @ tc)
     feats = [xd[:, -1], xd.mean(1), xd.std(1), slope, xd.min(1), xd.max(1)]
-    return np.concatenate([*feats, regime_last[:, None].astype(np.float64)], axis=1).astype(
-        np.float32
-    )
+    if regime_last is not None:
+        feats.append(regime_last[:, None].astype(np.float64))
+    return np.concatenate(feats, axis=1).astype(np.float32)
 
 
 def _features(data: WindowData) -> tuple[NDArray[np.float32], F32]:
@@ -53,6 +57,60 @@ def _features(data: WindowData) -> tuple[NDArray[np.float32], F32]:
         fx.append(window_features(x, r))
         fy.append(y)
     return np.concatenate(fx), np.concatenate(fy)
+
+
+def train_booster(
+    xtr: NDArray[np.float32],
+    ytr: NDArray[np.float32],
+    xva: NDArray[np.float32],
+    yva: NDArray[np.float32],
+    names: list[str],
+    params: dict[str, Any],
+    seed: int,
+    early_stopping_rounds: int,
+    categorical: list[str] | None = None,
+) -> lgb.Booster:
+    """Train a LightGBM regressor with early stopping on the validation features.
+
+    Parameters
+    ----------
+    xtr, ytr, xva, yva : numpy.ndarray
+        Train / validation features and targets.
+    names : list of str
+        Feature names (checked by the leak tests).
+    params : dict
+        LightGBM params; ``n_estimators`` is the round cap.
+    seed : int
+        Model seed.
+    early_stopping_rounds : int
+        Patience on the validation L2.
+    categorical : list of str or None
+        Categorical feature names.
+
+    Returns
+    -------
+    lightgbm.Booster
+        Fitted booster (``best_iteration`` set).
+    """
+    p = {
+        "objective": "regression",
+        "verbosity": -1,
+        "seed": seed,
+        "deterministic": True,
+        "force_row_wise": True,
+        "num_threads": int(os.environ.get("OMP_NUM_THREADS", "0")),
+        **params,
+    }
+    n_rounds = int(p.pop("n_estimators", 5000))
+    dtr = lgb.Dataset(xtr, ytr, feature_name=names, categorical_feature=categorical or "auto")
+    dva = lgb.Dataset(xva, yva, reference=dtr)
+    return lgb.train(
+        p,
+        dtr,
+        num_boost_round=n_rounds,
+        valid_sets=[dva],
+        callbacks=[lgb.early_stopping(early_stopping_rounds, verbose=False)],
+    )
 
 
 class LGBMModel:
@@ -71,25 +129,16 @@ class LGBMModel:
         self.channels = list(train.channels)
         xtr, ytr = _features(train)
         xva, yva = _features(val)
-        names = feature_names(self.channels)
-        params = {
-            "objective": "regression",
-            "verbosity": -1,
-            "seed": seed,
-            "deterministic": True,
-            "force_row_wise": True,
-            "num_threads": int(os.environ.get("OMP_NUM_THREADS", "0")),
-            **self.params,
-        }
-        n_rounds = int(params.pop("n_estimators", 5000))
-        dtr = lgb.Dataset(xtr, ytr, feature_name=names, categorical_feature=["regime_id"])
-        dva = lgb.Dataset(xva, yva, reference=dtr)
-        self.booster = lgb.train(
-            params,
-            dtr,
-            num_boost_round=n_rounds,
-            valid_sets=[dva],
-            callbacks=[lgb.early_stopping(self.early_stopping_rounds, verbose=False)],
+        self.booster = train_booster(
+            xtr,
+            ytr,
+            xva,
+            yva,
+            feature_names(self.channels),
+            self.params,
+            seed,
+            self.early_stopping_rounds,
+            categorical=["regime_id"],
         )
         return {"best_iteration": int(self.booster.best_iteration)}
 

@@ -37,5 +37,12 @@ def test_experiment_name_equals_stem_and_matches_config(stem: str) -> None:
     assert list(cfg.seeds) == [0, 1, 2]
     if dataset in ("cmapss-fd002", "cmapss-fd004"):
         assert cfg.data.n_regimes == 6
-    else:
+    elif dataset.startswith("cmapss-"):
         assert cfg.data.n_regimes == 1
+    else:  # N-CMAPSS: the setting name encodes every run-defining data choice
+        parts = setting.split("-")
+        assert parts[0] == "single"  # single-task (multi-task arrives in Phase 3)
+        assert {"full": "full_flight", "cruise": "cruise_only"}[parts[1]] == cfg.data.setting
+        assert ("res" in parts) == bool(cfg.data.residuals) != ("nores" in parts)
+        assert f"ds{cfg.data.downsample_factor}" in parts
+        assert cfg.data.family == "ncmapss"

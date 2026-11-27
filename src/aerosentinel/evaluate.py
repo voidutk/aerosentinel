@@ -179,7 +179,12 @@ def evaluate(cfg: DictConfig) -> dict[str, Any]:
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_DIR), config_name="config")
 def main(cfg: DictConfig) -> None:
-    """Hydra entrypoint; exits with code 3 if the leakage alarm fires."""
+    """Hydra entrypoint; exits with code 3 if the leakage alarm fires (C-MAPSS)."""
+    if str(cfg.data.family) == "ncmapss":
+        from aerosentinel.pipelines.ncmapss import evaluate_ncmapss
+
+        evaluate_ncmapss(cfg)
+        return
     doc = evaluate(cfg)
     if doc["leakage_alarm"]["triggered"]:
         print(

@@ -1,0 +1,19 @@
+# @package _global_
+# LightGBM on engineered window features, DS02, cruise_only, inputs W + X_s.
+defaults:
+  - override /data: ncmapss_ds02
+  - override /model: lgbm
+
+name: ncmapss-ds02_lgbm_single-cruise-nores-cap48-ds10
+data:
+  setting: cruise_only
+  residuals: false
+model:
+  # Raised for N-CMAPSS before any test evaluation: with the Phase 1 setting (lr 0.02, cap
+  # 5000 rounds) every fold of the first W + X_s runs stopped at the round cap with validation
+  # still improving. Early stopping (patience 200 on the val unit) now ends training.
+  params:
+    learning_rate: 0.05
+    n_estimators: 20000
+mlflow:
+  experiment: aerosentinel-ncmapss

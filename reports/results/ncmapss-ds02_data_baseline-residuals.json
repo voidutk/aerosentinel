@@ -1,0 +1,187 @@
+{
+  "experiment": "ncmapss-ds02_data_baseline-residuals",
+  "dataset": "ncmapss-ds02",
+  "model": "data",
+  "setting": "baseline-residuals",
+  "written_by": "scripts/prepare_ncmapss.py",
+  "source": "N-CMAPSS_DS02-006.h5",
+  "baseline_config": {
+    "n_cycles": 5,
+    "hidden": 64,
+    "max_rows": 20000,
+    "steps": 2000,
+    "lr": 0.003,
+    "weight_decay": 1e-05,
+    "seed": 0
+  },
+  "mask_params": {
+    "min_len": 512,
+    "std_max": 50.0,
+    "med_win": 31,
+    "stab_win": 61,
+    "high_frac": 0.5,
+    "min_span_ft": 500.0
+  },
+  "git": {
+    "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+    "dirty": true
+  },
+  "definition": {
+    "residual": "(X_s - f_u(W)) / sigma_u, f_u = per-engine MLP fit on the engine's own first 5 cycles (no hs, no labels, no other engine)",
+    "w_extrapolation_share": "share of rows after cycle 5 with any W descriptor outside the per-dimension [min, max] seen in cycles 1-5"
+  },
+  "splits": {
+    "dev": {
+      "units": {
+        "2": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 0.00010714866948546842,
+          "w_extrapolation_share": 0.018853967633061016,
+          "mean_abs_residual_baseline_cycles": 0.005298682488501072,
+          "mean_abs_residual_later_cycles": 0.0211322084069252,
+          "n_flights": 75,
+          "n_flights_with_cruise_run": 72
+        },
+        "5": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 9.208931442117319e-05,
+          "w_extrapolation_share": 0.20858316570002952,
+          "mean_abs_residual_baseline_cycles": 0.005611928645521402,
+          "mean_abs_residual_later_cycles": 0.027778415009379387,
+          "n_flights": 89,
+          "n_flights_with_cruise_run": 87
+        },
+        "10": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 9.281843085773289e-05,
+          "w_extrapolation_share": 0.07949549573475238,
+          "mean_abs_residual_baseline_cycles": 0.0059682875871658325,
+          "mean_abs_residual_later_cycles": 0.023912500590085983,
+          "n_flights": 82,
+          "n_flights_with_cruise_run": 78
+        },
+        "16": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 8.905620779842138e-05,
+          "w_extrapolation_share": 0.055271059251634724,
+          "mean_abs_residual_baseline_cycles": 0.005446928087621927,
+          "mean_abs_residual_later_cycles": 0.027996575459837914,
+          "n_flights": 63,
+          "n_flights_with_cruise_run": 63
+        },
+        "18": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 0.00011759899643948302,
+          "w_extrapolation_share": 0.0337280842482307,
+          "mean_abs_residual_baseline_cycles": 0.0058561949990689754,
+          "mean_abs_residual_later_cycles": 0.031359706073999405,
+          "n_flights": 71,
+          "n_flights_with_cruise_run": 70
+        },
+        "20": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 0.00013758830027654767,
+          "w_extrapolation_share": 0.08871422388756649,
+          "mean_abs_residual_baseline_cycles": 0.005768865346908569,
+          "mean_abs_residual_later_cycles": 0.03038198873400688,
+          "n_flights": 66,
+          "n_flights_with_cruise_run": 62
+        }
+      }
+    },
+    "test": {
+      "units": {
+        "11": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 0.00016334658721461892,
+          "w_extrapolation_share": 0.04362429572166586,
+          "mean_abs_residual_baseline_cycles": 0.00665515661239624,
+          "mean_abs_residual_later_cycles": 0.02955750748515129,
+          "n_flights": 59,
+          "n_flights_with_cruise_run": 58
+        },
+        "14": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 9910,
+          "fit_mse_std_units": 0.00012775312643498182,
+          "w_extrapolation_share": 0.15639213443364108,
+          "mean_abs_residual_baseline_cycles": 0.005765210371464491,
+          "mean_abs_residual_later_cycles": 0.026475179940462112,
+          "n_flights": 76,
+          "n_flights_with_cruise_run": 43
+        },
+        "15": {
+          "baseline_cycles": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "n_fit_rows": 20000,
+          "fit_mse_std_units": 7.15197529643774e-05,
+          "w_extrapolation_share": 0.10885126129239275,
+          "mean_abs_residual_baseline_cycles": 0.004953363444656134,
+          "mean_abs_residual_later_cycles": 0.026400232687592506,
+          "n_flights": 67,
+          "n_flights_with_cruise_run": 58
+        }
+      }
+    }
+  }
+}

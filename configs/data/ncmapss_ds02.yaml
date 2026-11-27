@@ -1,0 +1,23 @@
+# N-CMAPSS DS02 (SPEC §1.2, §1.3). Inputs W + X_s (+ healthy-baseline residuals).
+dataset: ncmapss-ds02
+family: ncmapss
+subset: DS02
+# Cap: hs-derived dev-unit minimum abnormal-degradation length (48 cycles, dev unit 16).
+# CruiseBench's η=5% caps match SPEC (DS02: 34) but CruiseBench does not state how η maps to a
+# cap, so per the rule agreed on 2026-11-27 the hs-derived cap is used. See
+# reports/results/ncmapss-pooled_data_cap-check.json.
+cap: 48
+setting: full_flight        # full_flight | cruise_only
+residuals: true             # add (X_s - f_u(W)) / sigma_u channels; score from cycle 6
+# T fixed by scripts/window_coverage.py before any model: largest T in {64, 128, 256} with
+# >= 95% of DS02 dev cycles having a cruise_only window at downsample 10.
+window: 64                  # model samples (64 x 10 s = 10.7 min)
+stride: 10                  # model samples; ONE value for every split (train = val = calib = test)
+downsample_factor: 10       # keep every 10th native (1 Hz) sample; CPU setting (SPEC §12)
+mask:                       # cruise-run mask (aerosentinel.data.masks.CruiseMaskParams)
+  min_len: 512
+  std_max: 50.0
+  med_win: 31
+  stab_win: 61
+  high_frac: 0.5
+  min_span_ft: 500.0

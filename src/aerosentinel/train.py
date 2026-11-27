@@ -105,7 +105,21 @@ def train(cfg: DictConfig) -> Path:
 
 @hydra.main(version_base="1.3", config_path=str(CONFIG_DIR), config_name="config")
 def main(cfg: DictConfig) -> None:
-    """Hydra entrypoint."""
+    """Hydra entrypoint (dispatches on ``data.family``)."""
+    if str(cfg.data.family) == "ncmapss":
+        from aerosentinel.pipelines.ncmapss import train_ncmapss
+
+        rd = train_ncmapss(cfg)
+        meta = json.loads((rd / "train_meta.json").read_text())
+        _log_mlflow(
+            cfg,
+            {
+                "config_hash": meta["config_hash"],
+                "val": meta["oof_per_cycle_capped"],
+                "n_params": meta["n_params"],
+            },
+        )
+        return
     train(cfg)
 
 
