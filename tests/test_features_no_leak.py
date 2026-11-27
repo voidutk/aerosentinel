@@ -10,10 +10,11 @@ import pandas as pd
 import pytest
 
 from aerosentinel.data import cmapss as cm
-from aerosentinel.data.prepare import prepare_dev
+from aerosentinel.data.prepare import prepare_dev, prepare_test
 from aerosentinel.data.splits import train_val_units
 from aerosentinel.models import MODEL_NAMES, build_model
 from aerosentinel.models.base import ALLOWED_INPUT_BASES, BANNED_INPUTS, feature_base
+from aerosentinel.models.lgbm import window_features
 from synth import write_cmapss_txt
 
 MODEL_CFGS: dict[str, dict[str, Any]] = {
@@ -131,27 +132,62 @@ def test_model_arrays_are_hand_zscored_kept_sensors(synthetic_root: Path, subset
             np.testing.assert_allclose(arr, want, rtol=1e-4, atol=1e-4)
 
 
+def _perturb_banned_columns(df: pd.DataFrame, relabel_units: bool, seed: int) -> pd.DataFrame:
+    """Non-additive changes to every banned column; sensors untouched.
+
+    Unit ids and cycles go through nonlinear but order-preserving maps (so the positional
+    unit split and the cycle order stay the same, while a z-scored copy of either column
+    would change). Settings get noise far below the regime spacing, so regimes stay the same.
+    """
+    out = df.copy()
+    if relabel_units:
+        out["unit"] = out["unit"] ** 2 + 1000
+    out["cycle"] = out["cycle"] ** 2 + 7
+    out[list(cm.SETTINGS)] += np.random.default_rng(seed).normal(0, 1e-3, (len(out), 3))
+    return out
+
+
 def test_model_arrays_ignore_unit_cycle_settings_and_labels(synthetic_root: Path) -> None:
-    """Changing unit ids, cycle numbers, settings or the RUL labels leaves X unchanged."""
+    """Changing unit ids, cycle numbers, settings or the RUL labels leaves the inputs unchanged.
+
+    Covers the train/val per-unit arrays, the official-test last windows and the LightGBM
+    feature matrix.
+    """
     raw_dir = synthetic_root / "data" / "raw" / "cmapss"
     base = _dev(synthetic_root, "FD002")
-    uncapped = _dev(synthetic_root, "FD002", cap=20)  # synthetic lives < 125: cap lower
+    base_test = prepare_test(raw_dir, "FD002", base.pre, 10, allow_test=True)
+    relabelled = _dev(synthetic_root, "FD002", cap=20)  # synthetic lives < 125: cap lower
     assert not all(
-        np.array_equal(a, b) for a, b in zip(base.train.labels, uncapped.train.labels, strict=True)
+        np.array_equal(a, b)
+        for a, b in zip(base.train.labels, relabelled.train.labels, strict=True)
     )
-    df = cm.load_train(raw_dir, "FD002")
-    df["unit"] += 1000  # monotonic relabel keeps the positional unit split
-    df["cycle"] += 500
-    # settings noise far below the regime spacing: same regimes, different settings values
-    df[list(cm.SETTINGS)] += np.random.default_rng(0).normal(0, 1e-3, (len(df), 3))
-    write_cmapss_txt(df, raw_dir / "train_FD002.txt")
+    write_cmapss_txt(
+        _perturb_banned_columns(cm.load_train(raw_dir, "FD002"), True, 0),
+        raw_dir / "train_FD002.txt",
+    )
+    test_df, _ = cm.load_test(raw_dir, "FD002", allow_test=True)
+    # test unit ids must stay 1..N (load_test asserts it), so only cycles/settings change
+    write_cmapss_txt(_perturb_banned_columns(test_df, False, 1), raw_dir / "test_FD002.txt")
     moved = _dev(synthetic_root, "FD002")
-    for other in (uncapped, moved):
+    # labels changed too (cycle**2 changes RUL), the inputs must not
+    assert not np.array_equal(base.train.labels[0], moved.train.labels[0])
+    for other in (relabelled, moved):
         assert other.pre.channels == base.pre.channels
         for wa, wb in ((base.train, other.train), (base.val, other.val)):
             assert len(wa.arrays) == len(wb.arrays)
             for a, b in zip(wa.arrays, wb.arrays, strict=True):
                 np.testing.assert_allclose(a, b, rtol=1e-4, atol=1e-4)
+    for (xa, _, ra), (xb, _, rb) in zip(
+        base.train.batches(512), moved.train.batches(512), strict=True
+    ):
+        np.testing.assert_array_equal(ra, rb)
+        np.testing.assert_allclose(
+            window_features(xa, ra), window_features(xb, rb), rtol=1e-4, atol=1e-4
+        )
+    # test windows go through base's fitted preprocessor, like evaluate does
+    moved_test = prepare_test(raw_dir, "FD002", base.pre, 10, allow_test=True)
+    np.testing.assert_allclose(base_test.x, moved_test.x, rtol=1e-4, atol=1e-4)
+    np.testing.assert_array_equal(base_test.regime_last, moved_test.regime_last)
 
 
 def test_selector_drops_quantized_sensors_within_every_regime() -> None:

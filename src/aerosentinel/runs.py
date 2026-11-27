@@ -66,9 +66,11 @@ GENERATED_PATHS: tuple[str, ...] = ("reports/results", "README.md")
 def git_info(root: Path) -> dict[str, Any]:
     """Current commit SHA and whether tracked code or config had uncommitted changes.
 
-    Untracked files (logs, scratch output) and the generated outputs in
-    :data:`GENERATED_PATHS` do not count as dirty: they cannot change what the committed
-    code computes.
+    Untracked files and the generated outputs in :data:`GENERATED_PATHS` do not count as
+    dirty. Generated outputs feed no computation. Untracked files are ignored so that logs
+    and scratch output do not flag every run; note that an untracked source file *could*
+    change results and would not be flagged. Configs are covered separately: their resolved
+    content is recorded in every run (``config`` and ``config_hash``).
     """
 
     def _git(*args: str) -> str:

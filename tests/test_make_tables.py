@@ -16,7 +16,12 @@ def _stat(m: float, s: float = 0.5) -> dict[str, float]:
 
 
 def _result(
-    dataset: str, model: str, rmse: float, alarm: bool = False, val: float | None = None
+    dataset: str,
+    model: str,
+    rmse: float,
+    alarm: bool = False,
+    val: float | None = None,
+    seeds: tuple[float, ...] | None = None,
 ) -> dict[str, Any]:
     block = {
         "rmse": _stat(rmse),
@@ -40,6 +45,9 @@ def _result(
             "test_capped": block,
             "test_uncapped": {**block, "rmse": _stat(rmse + 5)},
         },
+        "per_seed": [
+            {"seed": i, "test_capped": {"rmse": v}} for i, v in enumerate(seeds or (rmse,) * 3)
+        ],
         "leakage_alarm": {"triggered": alarm},
     }
 
@@ -83,6 +91,19 @@ def test_targets_pick_model_on_validation_not_test() -> None:
     assert "1D-CNN" in fd004 and "**no**" in fd004
     assert "picked on val" in md
     assert "not run" in mt.render_cmapss_targets([])
+
+
+def test_target_met_on_mean_but_not_every_seed_is_inconclusive() -> None:
+    res = [
+        _result("cmapss-fd001", "cnn1d", 12.98, seeds=(13.01, 12.65, 13.28)),
+        _result("cmapss-fd004", "cnn1d", 14.25, seeds=(14.2, 14.38, 14.17)),
+    ]
+    md = mt.render_cmapss_targets(res)
+    fd001 = next(ln for ln in md.splitlines() if ln.startswith("| FD001"))
+    fd004 = next(ln for ln in md.splitlines() if ln.startswith("| FD004"))
+    assert "13.01, 12.65, 13.28" in fd001
+    assert fd001.endswith("| **inconclusive** (mean meets it; 1/3 seeds do) |")
+    assert fd004.endswith("| yes |")
 
 
 def test_replace_between_markers_is_idempotent() -> None:

@@ -123,6 +123,7 @@ Implement SPEC §5.2, §5.3, §5.4, §5.5 on DS02: the full grid at downsample 1
    - LightGBM single-task × {full_flight, cruise_only}
    - {TCN, TSMixer, Transformer} × {single-task, multi-task} × {full_flight, cruise_only}
 4. Rank models by DS02 validation per-cycle RMSE (never test) and freeze the ranking. Rerun the top 2 at full resolution on Kaggle via scripts/kaggle_train.sh. The script installs the package from GitHub and keeps Kaggle's preinstalled CUDA torch.
+   - Model selection uses unit-level out-of-fold validation on last-window-truncated trajectories, so selection matches the test protocol.
 5. Save OOF predictions on all dev units from the unit rotation (SPEC §1.3 item 6) for Phases 4–5.
 6. Generalization:
    - Leave-one-flight-class-out on the dataset chosen by the Phase 2 Fc audit (DS02 or DS03).

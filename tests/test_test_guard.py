@@ -63,29 +63,53 @@ def test_test_unit_ids_must_be_one_to_n(synthetic_root: Path) -> None:
         cm.load_test(_raw(synthetic_root), "FD001", allow_test=True)
 
 
-def _passes_allow_true(path: Path) -> bool:
-    """True if any call in ``path`` passes the literal ``allow_test=True``."""
+EVALUATE = "src/aerosentinel/evaluate.py"
+
+
+def _code_files() -> list[Path]:
+    dirs = [ROOT / d for d in ("src", "scripts", "app") if (ROOT / d).is_dir()]
+    return sorted(p for d in dirs for p in d.rglob("*.py"))
+
+
+def _allow_test_keywords(path: Path) -> list[ast.expr]:
+    """Values passed as ``allow_test=...`` in every call in ``path``."""
     tree = ast.parse(path.read_text())
-    return any(
-        kw.arg == "allow_test" and isinstance(kw.value, ast.Constant) and kw.value.value is True
+    return [
+        kw.value
         for node in ast.walk(tree)
         if isinstance(node, ast.Call)
         for kw in node.keywords
-    )
+        if kw.arg == "allow_test"
+    ]
+
+
+def _is_literal_true(v: ast.expr) -> bool:
+    return isinstance(v, ast.Constant) and v.value is True
+
+
+def _is_pass_through(v: ast.expr) -> bool:
+    return isinstance(v, ast.Name) and v.id == "allow_test"
 
 
 def test_only_evaluate_passes_the_allow_flag() -> None:
-    users = sorted(
-        str(p.relative_to(ROOT))
-        for d in ("src", "scripts", "app")
-        if (ROOT / d).is_dir()
-        for p in (ROOT / d).rglob("*.py")
-        if _passes_allow_true(p)
-    )
-    assert users == ["src/aerosentinel/evaluate.py"], users
-    # A splatted flag (**{"allow_test": True}) or getattr tricks would dodge the AST check;
-    # forbid the string form outside evaluate too.
-    for d in ("src", "scripts"):
-        for p in (ROOT / d).rglob("*.py"):
-            if p.name != "evaluate.py":
-                assert '"allow_test"' not in p.read_text(), p
+    """Only evaluate.py may pass ``allow_test=True``.
+
+    Every other ``allow_test=...`` keyword in src/, scripts/ and app/ must forward the
+    caller's own ``allow_test`` parameter unchanged (the loader chain in cmapss.py and
+    prepare.py); a variable, expression or literal True anywhere else fails. The string
+    ``"allow_test"`` (e.g. a ``**{"allow_test": True}`` splat) is banned outside evaluate.py.
+
+    This is a guard against accidental use, not a sandbox: code that reads the files with
+    pandas directly is not caught here.
+    """
+    users = []
+    for p in _code_files():
+        rel = str(p.relative_to(ROOT))
+        values = _allow_test_keywords(p)
+        if any(_is_literal_true(v) for v in values):
+            users.append(rel)
+        if rel != EVALUATE:
+            bad = [ast.unparse(v) for v in values if not _is_pass_through(v)]
+            assert not bad, f"{rel} passes allow_test={bad}"
+            assert '"allow_test"' not in p.read_text() and "'allow_test'" not in p.read_text(), rel
+    assert users == [EVALUATE], users

@@ -43,24 +43,41 @@ Constant and Ridge are deterministic, so their std over seeds is 0 by constructi
 
 **Capped vs uncapped truth.** All models train on RUL targets capped at 125 cycles, so they cannot predict more than 125. Some test units have true RUL above 125, so uncapped RMSE and score are expected to be worse. They are reported for comparability with papers that score against uncapped truth, not as the headline. **The capped columns are primary.**
 
-**Phase 1 targets** (SPEC §3, capped test truth). These were stated up front as hypotheses. Per subset, the script picks the model with the lowest mean **validation** RMSE and then reports that model's test RMSE, so test numbers play no part in the choice:
+**Phase 1 targets** (SPEC §3, capped test truth). These were stated up front as hypotheses. Per subset, the script picks the model with the lowest mean **validation** RMSE and then reports that model's test RMSE, so test numbers play no part in the choice. A target counts as met only if every seed meets it. If only the mean does, it is marked inconclusive:
 
 <!-- results:cmapss-targets:start -->
-| Target (capped test RMSE) | Model (picked on val) | Val RMSE | Test RMSE (capped) | Met? |
-|---|---|---:|---:|---|
-| FD001 ≤ 13 | 1D-CNN | 11.41 ± 0.22 | 12.98 ± 0.32 | yes |
-| FD004 ≤ 20 | 1D-CNN | 15.42 ± 0.12 | 14.25 ± 0.11 | yes |
+| Target (capped test RMSE) | Model (picked on val) | Val RMSE | Test RMSE (capped) | Test RMSE per seed | Met? |
+|---|---|---:|---:|---:|---|
+| FD001 ≤ 13 | 1D-CNN | 11.41 ± 0.22 | 12.98 ± 0.32 | 13.01, 12.65, 13.28 | **inconclusive** (mean meets it; 1/3 seeds do) |
+| FD004 ≤ 20 | 1D-CNN | 15.42 ± 0.12 | 14.25 ± 0.11 | 14.20, 14.38, 14.17 | yes |
 <!-- results:cmapss-targets:end -->
 
 **Findings (Phase 1).** This section only reads the tables above and the results JSONs; "previous run" means the JSONs at commit `6243933`, before the review fixes.
 
-- **Targets.** Both SPEC §3 targets are met by the validation-picked model, the 1D-CNN on both subsets. FD001 is met narrowly (12.98 against 13). On FD001, LightGBM has the best test RMSE but not the best validation RMSE, so it is not the pick. The leakage alarm did not fire: no capped FD001 RMSE fell below 11 on any seed or model.
-- **Quantized-sensor filter (review fix): hypothesis not confirmed.** I expected that dropping the near-binary sensors, which turned into spikes of tens of σ after normalization, would improve FD002/FD004. It did not: no FD002/FD004 capped RMSE moved by more than 0.08 from the previous run. On FD001, dropping s6 moved LightGBM from 12.26 to 12.44 and the LSTM from 14.35 to 13.65. FD003 had no sensor flagged, and its numbers reproduce the previous run to the reported precision.
+- **Targets.** The validation-picked model is the 1D-CNN on both subsets.
+  - FD004 ≤ 20 is met on every seed.
+  - FD001 ≤ 13 is **inconclusive**: the mean (12.98) meets it, but 2 of 3 seeds do not.
+  - On FD001, LightGBM has the best test RMSE, but not the best validation RMSE, so it is not the pick (see the selection-bias note below).
+  - The leakage alarm did not fire: no capped FD001 RMSE fell below 11 on any seed or model.
+- **Quantized-sensor filter (review fix): hypothesis not confirmed.** I expected that dropping the quantized sensors would improve FD002/FD004. It did not: no FD002/FD004 capped RMSE moved by more than 0.08 from the previous run.
+  - Only two of the four dropped sensors actually spiked after normalization: FD002 s10 (max |z| 56.8) and FD004 s16 (max |z| 42.9, on 4 rows).
+  - FD001 s6 (7.4) and FD002 s16 (1.9) stay below the largest |z| of the kept sensors (8.3–8.7). These numbers come from train-split units, via `scripts/sensor_spikes.py` → `reports/results/cmapss-all_sensor-zmax_diag.json`.
+  - On FD001, the only preprocessing change was dropping s6. With the same three seeds, LightGBM moved from 12.26 to 12.44 and the LSTM from 14.35 to 13.65. Each move is only 1–2 seed std, so it is not shown to hold beyond these seeds. FD003 had no sensor flagged, and its numbers reproduce the previous run to the reported precision.
 - **Model ranking.**
   - On test, LightGBM is best on the single-condition subsets (FD001, FD003) and the 1D-CNN on the six-condition subsets (FD002, FD004).
   - The LSTM is never best. Its seed-to-seed std is the largest on FD001–FD003, but not on FD004.
-  - Ridge on the flattened window beats the constant baseline by a wide margin and trails every nonlinear model. With the widened grid, its validation-picked α is inside the grid on every subset (10 to 1000). Validation RMSE is flat below α = 1000 and rises above it.
-- **Validation is a noisy selector.** FD001/FD003 have only 20 validation units. On FD001 the neural nets score about 1.6 RMSE lower on validation than on test, against 0.2 for LightGBM. On FD002 and FD004, every non-constant model scores higher on validation than on test.
+  - Ridge on the flattened window beats the constant baseline by a wide margin and trails every nonlinear model. With the widened grid, its validation-picked α is inside the grid on every subset (10 to 1000). Validation RMSE is flat up to α = 1000 on FD001, FD002 and FD004 and rises above it. On FD003 it already rises at α = 1000.
+- **Model selection on validation is biased, and noisy.**
+  - The validation RMSE used for the pick was already optimized on the same validation units:
+    - The neural nets keep the weights of their best epoch out of up to 100, so their reported validation RMSE is that minimum.
+    - LightGBM picks its best boosting round on those units.
+    - Ridge picks among 7 α values on them.
+    - The bias is therefore optimistic, and by different amounts per model.
+  - The validation metric also scores every window of each validation unit, while the test metric uses only the last window of each test unit.
+  - FD001/FD003 have only 20 validation units.
+  - On FD001, the neural nets score about 1.6 RMSE lower on validation than on test, against 0.2 for LightGBM. That is consistent with this bias and likely why the 1D-CNN, not LightGBM, is picked.
+  - On FD002 and FD004, every non-constant model scores higher on validation than on test.
+  - From Phase 3, model selection uses unit-level out-of-fold validation on last-window-truncated trajectories, which matches the test protocol (`docs/PHASES.md`).
 - **Padded test units** (FD002: 6, FD004: 11; breakdown in each JSON under `test_capped_by_padding`). These groups are small, so their RMSE is noisy. On FD002, LightGBM does worse on padded units than on full-length ones, while the 1D-CNN and LSTM do better.
 - **Budget note.** The FD001 1D-CNN ran 94, 100 and 96 epochs, so one seed hit the 100-epoch cap. Every other neural-net run early-stopped by epoch 74.
 
@@ -69,13 +86,13 @@ These are re-runs of simple baselines under one fixed protocol. Literature numbe
 ## Protocol (C-MAPSS)
 
 - **Data:** NASA C-MAPSS (Saxena & Goebel 2008), downloaded from the primary NASA S3 URL by `scripts/download_data.py cmapss`. SHA256 checksums are in `configs/data_checksums.txt`.
-- **Splits:** by engine unit only. Validation is 20% of the train-file units (fixed split seed 0, so every model sees the same units). The official test files can only be read with an explicit `allow_test=True`, which only `aerosentinel.evaluate` passes (`tests/test_test_guard.py` enforces this).
+- **Splits:** by engine unit only. Validation is 20% of the train-file units (fixed split seed 0, so every model sees the same units). The C-MAPSS loaders raise on the official test files (`test_*`, `RUL_*`) unless called with `allow_test=True`, which only `aerosentinel.evaluate` passes. `tests/test_test_guard.py` checks this. It is a guard against accidental use, not a hard barrier: code that opens the files directly with pandas or numpy is not stopped.
 - **Labels:** piecewise-linear RUL, capped at 125 on training targets.
 - **Preprocessing**, fit on train-split units only:
   - FD002/FD004: KMeans (k=6) on the three operating settings, then a per-regime z-score of every sensor. FD001/FD003: a global z-score.
   - Then sensor selection, with two rules:
     - a variance threshold on the normalized sensors. After a per-regime z-score every non-constant sensor has variance ≈1, so this only drops sensors that are constant within every regime;
-    - drop sensors with **≤ 2 distinct raw values within every regime**. These quantized sensors (FD001 s6, FD002 s10/s16, FD004 s16) pass the variance rule, but the z-score turns one flip between their levels into a spike of tens of σ.
+    - drop sensors with **≤ 2 distinct raw values within every regime**. These quantized sensors (FD001 s6, FD002 s10/s16, FD004 s16) pass the variance rule. For two of them, FD002 s10 and FD004 s16, the z-score turns a flip between levels into a spike of tens of σ (see the Findings).
   - The kept and dropped sensors are recorded in every results JSON.
 - **Inputs:** regime-normalized sensors only. LightGBM also gets the regime id. Unit, cycle, the raw settings and RUL never reach a model, and `tests/test_features_no_leak.py` enforces this.
 - **Windows:** length 30 and stride 1, using a window index over per-unit arrays (nothing is materialized).
@@ -87,7 +104,8 @@ These are re-runs of simple baselines under one fixed protocol. Literature numbe
   - LightGBM: last/mean/std/slope/min/max of each sensor, plus the regime id.
   - 1D-CNN: Li et al. 2018 style.
   - LSTM: 2 × 64.
-  - All hyperparameters were fixed before any test evaluation. The neural nets use AdamW, cosine schedule, and early stopping on validation RMSE (SPEC §5.3).
+  - All hyperparameters were fixed before the first test evaluation (commit `6243933`). **The test set has since been scored a second time.** After a review of that first run, two changes were made: the ≤ 2-distinct-values sensor rule, and the ridge α grid, widened from {0.1…100} to {0.1…10⁵} because α sat on its upper edge. Everything was then retrained and re-scored. These changes came from review findings (input spikes and α at the grid edge), not from tuning on test RMSE, but the reported numbers are from the second look at the test set.
+  - The neural nets use AdamW, a cosine schedule, and early stopping on validation RMSE (SPEC §5.3).
 - **Metrics:** RMSE, MAE, and the Saxena asymmetric score with d = pred − true, summed for C-MAPSS. All are reported as mean ± sample std over seeds 0, 1, 2.
 - **Leakage alarm:** a capped FD001 RMSE below 11 on any seed makes `evaluate` exit non-zero (SPEC §3).
 

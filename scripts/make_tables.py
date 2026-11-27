@@ -123,26 +123,37 @@ def render_cmapss_targets(results: list[Result]) -> str:
     """Check the SPEC §3 Phase 1 targets.
 
     Per subset the model is picked by **validation** RMSE (mean over seeds, validation
-    units only); the row then reports that model's capped test RMSE. Test numbers never
-    take part in the choice.
+    units only); the row then reports that model's capped test RMSE, per seed and as
+    mean ± std. Test numbers never take part in the choice.
+
+    A target is ``yes`` only if every seed meets it; ``inconclusive`` if the mean meets it
+    but some seed does not; ``no`` if the mean misses.
     """
     lines = [
         "| Target (capped test RMSE) | Model (picked on val) | Val RMSE | Test RMSE (capped) "
-        "| Met? |",
-        "|---|---|---:|---:|---|",
+        "| Test RMSE per seed | Met? |",
+        "|---|---|---:|---:|---:|---|",
     ]
     for dataset, target in CMAPSS_TARGETS.items():
         rows = [r for r in results if r["dataset"] == dataset and r["model"] in CMAPSS_MODELS]
         label = f"{dataset.removeprefix('cmapss-').upper()} ≤ {target:g}"
         if not rows:
-            lines.append(f"| {label} | – | – | – | not run |")
+            lines.append(f"| {label} | – | – | – | – | not run |")
             continue
         pick = min(rows, key=lambda r: r["summary"]["val"]["rmse"]["mean"])
         test = pick["summary"]["test_capped"]["rmse"]
-        met = "yes" if test["mean"] <= target else "**no**"
+        per_seed = [float(s["test_capped"]["rmse"]) for s in pick.get("per_seed", [])]
+        n_ok = sum(v <= target for v in per_seed)
+        if test["mean"] > target:
+            met = "**no**"
+        elif n_ok == len(per_seed):
+            met = "yes"
+        else:
+            met = f"**inconclusive** (mean meets it; {n_ok}/{len(per_seed)} seeds do)"
+        seeds = ", ".join(f"{v:.2f}" for v in per_seed) or "–"
         lines.append(
             f"| {label} | {CMAPSS_MODELS[pick['model']]} | "
-            f"{fmt(pick['summary']['val']['rmse'], 2)} | {fmt(test, 2)} | {met} |"
+            f"{fmt(pick['summary']['val']['rmse'], 2)} | {fmt(test, 2)} | {seeds} | {met} |"
         )
     return "\n".join(lines)
 
