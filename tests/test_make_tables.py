@@ -126,3 +126,82 @@ def test_committed_readme_matches_committed_results() -> None:
     assert mt.render_readme(readme, mt.load_results(paths.results)) == readme, (
         "README tables are stale: run `uv run python scripts/make_tables.py`"
     )
+
+
+def _ncm(setting: str, res: bool, rmse: float) -> dict[str, Any]:
+    block = {"rmse": _stat(rmse), "mae": _stat(rmse), "score_mean": _stat(0.4)}
+    stem = f"single-{setting}-{'res' if res else 'nores'}-cap48-ds10"
+    return {
+        "experiment": f"ncmapss-ds02_lgbm_{stem}",
+        "dataset": "ncmapss-ds02",
+        "model": "lgbm",
+        "setting": stem,
+        "seeds": [0, 1, 2],
+        "protocol": {"inputs": ["W", "X_s", "residuals"] if res else ["W", "X_s"]},
+        "config": {"data": {"cap": 48, "window": 64, "downsample_factor": 10, "stride": 10}},
+        "test_units": [11, 14, 15],
+        "excluded_test_cycles": {"total": {"n_scored": 190, "n_without_window": 7}},
+        "summary": {
+            "oof_val_per_cycle_capped": block,
+            "test_per_cycle_capped": block,
+            "test_per_cycle_uncapped": {**block, "rmse": _stat(rmse + 9)},
+            "test_per_cycle_ge6_capped": block,
+            "test_per_window_capped": {**block, "rmse": _stat(rmse + 1)},
+            "test_per_unit_per_cycle_capped": {"11": block, "14": None, "15": block},
+        },
+    }
+
+
+def test_ncmapss_table_orders_rows_and_bolds_best() -> None:
+    res = [
+        _ncm("cruise", False, 6.0),
+        _ncm("full", True, 4.0),
+        _ncm("cruise", True, 5.0),
+        _ncm("full", False, 7.0),
+        _result("cmapss-fd001", "lgbm", 12.5),  # ignored
+    ]
+    md = mt.render_ncmapss_table(res)
+    rows = [ln for ln in md.splitlines() if ln.startswith("| DS02")]
+    assert [(r.split("|")[3].strip(), r.split("|")[4].strip()) for r in rows] == [
+        ("full flight", "W + X_s + residuals"),
+        ("full flight", "W + X_s"),
+        ("cruise only", "W + X_s + residuals"),
+        ("cruise only", "W + X_s"),
+    ]
+    assert "**4.00 ± 0.50**" in rows[0] and "**" not in rows[1].split("|")[6]
+    assert "13.00 ± 0.50" in rows[0]  # uncapped column
+    assert "190 / 7" in rows[0]
+    per_unit = [ln for ln in md.splitlines() if ln.startswith("| full flight |")]
+    assert "–" in per_unit[0]  # unit 14 without scored cycles
+    assert "T = 64" in md and "cycles ≥ 6" in md
+    assert "No N-CMAPSS results" in mt.render_ncmapss_table([_result("cmapss-fd001", "x", 1)])
+
+
+def test_ncmapss_data_block_renders_audits() -> None:
+    fc = {
+        "experiment": "ncmapss-ds02_data_fc-audit",
+        "dataset": "ncmapss-ds02",
+        "model": "data",
+        "audit": {"DS02": {"dev_units_per_class": {"1": [], "2": [], "3": [2, 5]}}},
+        "lofco_dataset": "DS03",
+    }
+    cap = {
+        "experiment": "ncmapss-pooled_data_cap-check",
+        "dataset": "ncmapss-pooled",
+        "model": "data",
+        "cruisebench": {
+            "reachable": True,
+            "commit": "ef26d40fe06b75ce",
+            "caps_by_eta": {"eta5": {"caps": {"DS02": 34}}, "eta0": {"caps": {"DS02": 41}}},
+        },
+        "cap_source": "hs-derived",
+        "cap_source_reason": "definition not stated",
+        "spec_caps_eta5": {"DS02": 34},
+        "hs_derived": {"caps": {"DS02": 48}},
+        "caps_used": {"DS02": 48},
+    }
+    md = mt.render_ncmapss_data([fc, cap])
+    assert "**DS03**" in md and "class 3: 2" in md
+    assert "| DS02 | 34 | 34 | 41 | 48 | 48 |" in md
+    assert "hs-derived" in md and "ef26d40fe0" in md
+    assert "No N-CMAPSS data audits" in mt.render_ncmapss_data([])

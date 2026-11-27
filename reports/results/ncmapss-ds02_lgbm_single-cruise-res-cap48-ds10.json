@@ -1,0 +1,874 @@
+{
+  "experiment": "ncmapss-ds02_lgbm_single-cruise-res-cap48-ds10",
+  "dataset": "ncmapss-ds02",
+  "model": "lgbm",
+  "setting": "single-cruise-res-cap48-ds10",
+  "written_by": "aerosentinel.evaluate (pipelines.ncmapss)",
+  "protocol": {
+    "inputs": [
+      "W",
+      "X_s",
+      "residuals"
+    ],
+    "first_scored_cycle": 6,
+    "split": "unit-level rotation over dev units: per fold 4 train / 1 val (early stopping) / 1 calib (out-of-fold prediction); every dev unit is calib once",
+    "oof_val": "per-cycle metrics on the calib unit of each fold (out-of-fold)",
+    "test": "official test units; prediction = mean of the fold models' window predictions; per-cycle = median of the cycle's window predictions",
+    "setting": "cruise_only",
+    "windows": "T=64 model samples, stride=10 model samples (same for every split), downsample=10; never crossing a (unit, cycle) boundary or a cruise-run edge",
+    "truth": "capped at 48 (primary) and uncapped (secondary)",
+    "score": "Saxena score with d = pred - true; score_mean is the N-CMAPSS convention",
+    "std": "sample std over seeds (ddof=1)"
+  },
+  "config_hash": "f2117a37acae75e4",
+  "config": {
+    "name": "ncmapss-ds02_lgbm_single-cruise-res-cap48-ds10",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "split_seed": 0,
+    "deterministic": true,
+    "mlflow": {
+      "tracking_uri": null,
+      "experiment": "aerosentinel-ncmapss"
+    },
+    "data": {
+      "dataset": "ncmapss-ds02",
+      "family": "ncmapss",
+      "subset": "DS02",
+      "cap": 48,
+      "setting": "cruise_only",
+      "residuals": true,
+      "window": 64,
+      "stride": 10,
+      "downsample_factor": 10,
+      "mask": {
+        "min_len": 512,
+        "std_max": 50.0,
+        "med_win": 31,
+        "stab_win": 61,
+        "high_frac": 0.5,
+        "min_span_ft": 500.0
+      }
+    },
+    "model": {
+      "name": "lgbm",
+      "early_stopping_rounds": 200,
+      "params": {
+        "n_estimators": 20000,
+        "learning_rate": 0.05,
+        "num_leaves": 31,
+        "min_child_samples": 50,
+        "subsample": 0.8,
+        "subsample_freq": 1,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 1.0
+      }
+    }
+  },
+  "git": {
+    "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+    "dirty": true
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "dev_units": [
+    2,
+    5,
+    10,
+    16,
+    18,
+    20
+  ],
+  "test_units": [
+    11,
+    14,
+    15
+  ],
+  "folds": [
+    {
+      "fold": 0,
+      "train_units": [
+        2,
+        5,
+        18,
+        20
+      ],
+      "val_units": [
+        16
+      ],
+      "calib_units": [
+        10
+      ],
+      "n_train_windows": 9559,
+      "best_iteration": 637
+    },
+    {
+      "fold": 1,
+      "train_units": [
+        2,
+        5,
+        16,
+        18
+      ],
+      "val_units": [
+        10
+      ],
+      "calib_units": [
+        20
+      ],
+      "n_train_windows": 9833,
+      "best_iteration": 130
+    },
+    {
+      "fold": 2,
+      "train_units": [
+        2,
+        5,
+        10,
+        16
+      ],
+      "val_units": [
+        20
+      ],
+      "calib_units": [
+        18
+      ],
+      "n_train_windows": 9855,
+      "best_iteration": 80
+    },
+    {
+      "fold": 3,
+      "train_units": [
+        5,
+        10,
+        16,
+        20
+      ],
+      "val_units": [
+        18
+      ],
+      "calib_units": [
+        2
+      ],
+      "n_train_windows": 9429,
+      "best_iteration": 58
+    },
+    {
+      "fold": 4,
+      "train_units": [
+        10,
+        16,
+        18,
+        20
+      ],
+      "val_units": [
+        2
+      ],
+      "calib_units": [
+        5
+      ],
+      "n_train_windows": 8902,
+      "best_iteration": 130
+    },
+    {
+      "fold": 5,
+      "train_units": [
+        2,
+        10,
+        18,
+        20
+      ],
+      "val_units": [
+        5
+      ],
+      "calib_units": [
+        16
+      ],
+      "n_train_windows": 9054,
+      "best_iteration": 58
+    }
+  ],
+  "channels": [
+    "alt",
+    "Mach",
+    "TRA",
+    "T2",
+    "T24",
+    "T30",
+    "T48",
+    "T50",
+    "P15",
+    "P2",
+    "P21",
+    "P24",
+    "Ps30",
+    "P40",
+    "P50",
+    "Nf",
+    "Nc",
+    "Wf",
+    "r_T24",
+    "r_T30",
+    "r_T48",
+    "r_T50",
+    "r_P15",
+    "r_P2",
+    "r_P21",
+    "r_P24",
+    "r_Ps30",
+    "r_P40",
+    "r_P50",
+    "r_Nf",
+    "r_Nc",
+    "r_Wf"
+  ],
+  "n_inputs": 192,
+  "n_dev_windows": 14158,
+  "n_test_windows": 2627,
+  "excluded_test_cycles": {
+    "total": {
+      "n_cycles": 202,
+      "n_before_first_scored_cycle": 15,
+      "n_without_window": 46,
+      "n_scored": 141
+    },
+    "per_unit": {
+      "11": {
+        "n_cycles": 59,
+        "n_before_first_scored_cycle": 5,
+        "n_without_window": 2,
+        "n_scored": 52
+      },
+      "14": {
+        "n_cycles": 76,
+        "n_before_first_scored_cycle": 5,
+        "n_without_window": 33,
+        "n_scored": 38
+      },
+      "15": {
+        "n_cycles": 67,
+        "n_before_first_scored_cycle": 5,
+        "n_without_window": 11,
+        "n_scored": 51
+      }
+    }
+  },
+  "summary": {
+    "oof_val_per_cycle_capped": {
+      "rmse": {
+        "mean": 3.7125632883629307,
+        "std": 0.032327940334566097
+      },
+      "mae": {
+        "mean": 2.797437836966911,
+        "std": 0.03491191669684909
+      },
+      "score_sum": {
+        "mean": 130.90873216100962,
+        "std": 1.7758475040829673
+      },
+      "score_mean": {
+        "mean": 0.3272718304025241,
+        "std": 0.004439618760207406
+      },
+      "phm21": {
+        "mean": 2.019917559382727,
+        "std": 0.01836699519409399
+      }
+    },
+    "test_per_cycle_capped": {
+      "rmse": {
+        "mean": 5.078681769986198,
+        "std": 0.02056789917826193
+      },
+      "mae": {
+        "mean": 4.0642820669752036,
+        "std": 0.03418314312768391
+      },
+      "score_sum": {
+        "mean": 79.68294992034393,
+        "std": 0.6330529699761035
+      },
+      "score_mean": {
+        "mean": 0.5651273043996022,
+        "std": 0.004489737375717064
+      },
+      "phm21": {
+        "mean": 2.8219045371929004,
+        "std": 0.012525991074388348
+      }
+    },
+    "test_per_cycle_uncapped": {
+      "rmse": {
+        "mean": 7.183744218348088,
+        "std": 0.028329223698425336
+      },
+      "mae": {
+        "mean": 5.752225329386551,
+        "std": 0.03418314312768391
+      },
+      "score_sum": {
+        "mean": 116.04712515328875,
+        "std": 0.7519463060199459
+      },
+      "score_mean": {
+        "mean": 0.8230292564063032,
+        "std": 0.005332952524964143
+      },
+      "phm21": {
+        "mean": 4.003386737377196,
+        "std": 0.01677118024053322
+      }
+    },
+    "test_per_cycle_ge6_capped": {
+      "rmse": {
+        "mean": 5.078681769986198,
+        "std": 0.02056789917826193
+      },
+      "mae": {
+        "mean": 4.0642820669752036,
+        "std": 0.03418314312768391
+      },
+      "score_sum": {
+        "mean": 79.68294992034393,
+        "std": 0.6330529699761035
+      },
+      "score_mean": {
+        "mean": 0.5651273043996022,
+        "std": 0.004489737375717064
+      },
+      "phm21": {
+        "mean": 2.8219045371929004,
+        "std": 0.012525991074388348
+      }
+    },
+    "test_per_window_capped": {
+      "rmse": {
+        "mean": 5.174819875549633,
+        "std": 0.013172279863226919
+      },
+      "mae": {
+        "mean": 4.096158861170772,
+        "std": 0.02490081242186543
+      },
+      "score_sum": {
+        "mean": 1523.7010193311708,
+        "std": 8.606862261678595
+      },
+      "score_mean": {
+        "mean": 0.5800156145151013,
+        "std": 0.0032763084361166995
+      },
+      "phm21": {
+        "mean": 2.8774177450323672,
+        "std": 0.008215510626829082
+      }
+    },
+    "test_per_window_uncapped": {
+      "rmse": {
+        "mean": 6.221310572273036,
+        "std": 0.018208375012825757
+      },
+      "mae": {
+        "mean": 4.948449319350767,
+        "std": 0.024892211367847934
+      },
+      "score_sum": {
+        "mean": 1852.5813660901194,
+        "std": 9.606870926696663
+      },
+      "score_mean": {
+        "mean": 0.7052079810011874,
+        "std": 0.003656974087056187
+      },
+      "phm21": {
+        "mean": 3.4632592766371117,
+        "std": 0.010860934592150347
+      }
+    },
+    "test_per_unit_per_cycle_capped": {
+      "11": {
+        "rmse": {
+          "mean": 5.3644657985317705,
+          "std": 0.008514205289446566
+        },
+        "mae": {
+          "mean": 4.1054122782132065,
+          "std": 0.016997899537334858
+        },
+        "score_sum": {
+          "mean": 31.379506095044523,
+          "std": 0.12347256643424027
+        },
+        "score_mean": {
+          "mean": 0.6034520402893176,
+          "std": 0.002374472431427734
+        },
+        "phm21": {
+          "mean": 2.983958919410544,
+          "std": 0.00542904899229488
+        }
+      },
+      "14": {
+        "rmse": {
+          "mean": 3.6061500519449594,
+          "std": 0.02676763795767072
+        },
+        "mae": {
+          "mean": 3.022762552292898,
+          "std": 0.04581803639847783
+        },
+        "score_sum": {
+          "mean": 14.059298151902839,
+          "std": 0.19349456463453574
+        },
+        "score_mean": {
+          "mean": 0.3699815303132326,
+          "std": 0.005091962227224624
+        },
+        "phm21": {
+          "mean": 1.988065791129096,
+          "std": 0.015904855805586652
+        }
+      },
+      "15": {
+        "rmse": {
+          "mean": 5.681419903442453,
+          "std": 0.031818023947318495
+        },
+        "mae": {
+          "mean": 4.798379529201702,
+          "std": 0.045515194202586935
+        },
+        "score_sum": {
+          "mean": 34.244145673396574,
+          "std": 0.33186911906039485
+        },
+        "score_mean": {
+          "mean": 0.6714538367332662,
+          "std": 0.006507237628635221
+        },
+        "phm21": {
+          "mean": 3.17643687008786,
+          "std": 0.01916044581556198
+        }
+      }
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "oof_val": {
+        "per_cycle_capped": {
+          "rmse": 3.6754157537442813,
+          "mae": 2.757348990725868,
+          "score_sum": 128.85924578485034,
+          "score_mean": 0.3221481144621259,
+          "phm21": 1.9987819341032036
+        },
+        "per_window_capped": {
+          "rmse": 3.7745832853366665,
+          "mae": 2.841504243178648,
+          "score_sum": 4742.811808877725,
+          "score_mean": 0.3349916519902334,
+          "phm21": 2.05478746866345
+        }
+      },
+      "test_per_cycle": {
+        "n_cycles": 141,
+        "capped": {
+          "rmse": 5.066415333447596,
+          "mae": 4.038144764738433,
+          "score_sum": 79.2713253867003,
+          "score_mean": 0.5622079814659595,
+          "phm21": 2.814311657456778
+        },
+        "uncapped": {
+          "rmse": 7.156312340832461,
+          "mae": 5.726088027149781,
+          "score_sum": 115.44686910841355,
+          "score_mean": 0.8187721213362663,
+          "phm21": 3.9875422310843636
+        }
+      },
+      "test_per_cycle_cycles_ge6": {
+        "n_cycles": 141,
+        "capped": {
+          "rmse": 5.066415333447596,
+          "mae": 4.038144764738433,
+          "score_sum": 79.2713253867003,
+          "score_mean": 0.5622079814659595,
+          "phm21": 2.814311657456778
+        },
+        "uncapped": {
+          "rmse": 7.156312340832461,
+          "mae": 5.726088027149781,
+          "score_sum": 115.44686910841355,
+          "score_mean": 0.8187721213362663,
+          "phm21": 3.9875422310843636
+        }
+      },
+      "test_per_window": {
+        "capped": {
+          "rmse": 5.163851592698373,
+          "mae": 4.077775036864036,
+          "score_sum": 1517.3774481391843,
+          "score_mean": 0.5776084690290004,
+          "phm21": 2.8707300308636867
+        },
+        "uncapped": {
+          "rmse": 6.202311777464297,
+          "mae": 4.9300643795944445,
+          "score_sum": 1844.4671682299208,
+          "score_mean": 0.7021192113551279,
+          "phm21": 3.4522154944097125
+        }
+      },
+      "test_per_unit_per_cycle": {
+        "11": {
+          "n_cycles": 52,
+          "capped": {
+            "rmse": 5.364514630994942,
+            "mae": 4.100808548018341,
+            "score_sum": 31.35445125956342,
+            "score_mean": 0.6029702165300658,
+            "phm21": 2.983742423762504
+          },
+          "uncapped": {
+            "rmse": 5.4954635839517305,
+            "mae": 4.389270086479879,
+            "score_sum": 32.75649184430777,
+            "score_mean": 0.6299325354674571,
+            "phm21": 3.062698059709594
+          }
+        },
+        "14": {
+          "n_cycles": 38,
+          "capped": {
+            "rmse": 3.5937331387358986,
+            "mae": 2.985373453883021,
+            "score_sum": 13.9394426375935,
+            "score_mean": 0.36682743783140787,
+            "phm21": 1.9802802882836532
+          },
+          "uncapped": {
+            "rmse": 8.411285678492051,
+            "mae": 6.459057664409336,
+            "score_sum": 35.033101648346396,
+            "score_mean": 0.9219237275880631,
+            "phm21": 4.666604703040057
+          }
+        },
+        "15": {
+          "n_cycles": 51,
+          "capped": {
+            "rmse": 5.656930151621761,
+            "mae": 4.758670119286485,
+            "score_sum": 33.97743148954338,
+            "score_mean": 0.6662241468537917,
+            "phm21": 3.1615771492377767
+          },
+          "uncapped": {
+            "rmse": 7.621061932394241,
+            "mae": 6.542983844776679,
+            "score_sum": 47.657275615759396,
+            "score_mean": 0.9344563846227333,
+            "phm21": 4.277759158508487
+          }
+        }
+      },
+      "best_iterations": [
+        406,
+        319,
+        83,
+        65,
+        178,
+        60
+      ],
+      "n_params": 34441,
+      "train_seconds": 44.4222140379934,
+      "train_git": {
+        "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+        "dirty": true
+      }
+    },
+    {
+      "seed": 1,
+      "oof_val": {
+        "per_cycle_capped": {
+          "rmse": 3.7279525258651303,
+          "mae": 2.821157206718915,
+          "score_sum": 131.99125556378925,
+          "score_mean": 0.32997813890947314,
+          "phm21": 2.0289653323873016
+        },
+        "per_window_capped": {
+          "rmse": 3.828235495333943,
+          "mae": 2.905315984587463,
+          "score_sum": 4866.478706271321,
+          "score_mean": 0.34372642366657163,
+          "phm21": 2.085980959500257
+        }
+      },
+      "test_per_cycle": {
+        "n_cycles": 141,
+        "capped": {
+          "rmse": 5.102427182258249,
+          "mae": 4.10296552529422,
+          "score_sum": 80.41190652219439,
+          "score_mean": 0.5702972093772651,
+          "phm21": 2.836362195817757
+        },
+        "uncapped": {
+          "rmse": 7.212892719671177,
+          "mae": 5.790908787705567,
+          "score_sum": 116.89056961904473,
+          "score_mean": 0.8290111320499626,
+          "phm21": 4.02095192586057
+        }
+      },
+      "test_per_cycle_cycles_ge6": {
+        "n_cycles": 141,
+        "capped": {
+          "rmse": 5.102427182258249,
+          "mae": 4.10296552529422,
+          "score_sum": 80.41190652219439,
+          "score_mean": 0.5702972093772651,
+          "phm21": 2.836362195817757
+        },
+        "uncapped": {
+          "rmse": 7.212892719671177,
+          "mae": 5.790908787705567,
+          "score_sum": 116.89056961904473,
+          "score_mean": 0.8290111320499626,
+          "phm21": 4.02095192586057
+        }
+      },
+      "test_per_window": {
+        "capped": {
+          "rmse": 5.189429888729032,
+          "mae": 4.124496966474823,
+          "score_sum": 1533.5026402810277,
+          "score_mean": 0.5837467226041216,
+          "phm21": 2.886588305666577
+        },
+        "uncapped": {
+          "rmse": 6.238609281664323,
+          "mae": 4.976775991051814,
+          "score_sum": 1863.1891759599848,
+          "score_mean": 0.7092459748610525,
+          "phm21": 3.473927628262688
+        }
+      },
+      "test_per_unit_per_cycle": {
+        "11": {
+          "n_cycles": 52,
+          "capped": {
+            "rmse": 5.3729554825611485,
+            "mae": 4.124237848703226,
+            "score_sum": 31.51358459700944,
+            "score_mean": 0.6060304730194124,
+            "phm21": 2.9894929777902806
+          },
+          "uncapped": {
+            "rmse": 5.5064454160875425,
+            "mae": 4.412699387164764,
+            "score_sum": 32.921354808804416,
+            "score_mean": 0.6331029770923926,
+            "phm21": 3.0697741965899676
+          }
+        },
+        "14": {
+          "n_cycles": 38,
+          "capped": {
+            "rmse": 3.6368711918298224,
+            "mae": 3.0738736705557215,
+            "score_sum": 14.282523607480792,
+            "score_mean": 0.37585588440738926,
+            "phm21": 2.006363538118606
+          },
+          "uncapped": {
+            "rmse": 8.488806329121818,
+            "mae": 6.547557881082037,
+            "score_sum": 35.568848407374695,
+            "score_mean": 0.9360223265098604,
+            "phm21": 4.712414327815839
+          }
+        },
+        "15": {
+          "n_cycles": 51,
+          "capped": {
+            "rmse": 5.717383457430062,
+            "mae": 4.848050420643134,
+            "score_sum": 34.61579831770417,
+            "score_mean": 0.6787411434843955,
+            "phm21": 3.1980623004572286
+          },
+          "uncapped": {
+            "rmse": 7.696036957164719,
+            "mae": 6.632364146133332,
+            "score_sum": 48.40036640286562,
+            "score_mean": 0.9490267922130514,
+            "phm21": 4.3225318746888854
+          }
+        }
+      },
+      "best_iterations": [
+        881,
+        360,
+        83,
+        57,
+        145,
+        53
+      ],
+      "n_params": 48949,
+      "train_seconds": 45.61782649899396,
+      "train_git": {
+        "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+        "dirty": true
+      }
+    },
+    {
+      "seed": 2,
+      "oof_val": {
+        "per_cycle_capped": {
+          "rmse": 3.7343215854793796,
+          "mae": 2.81380731345595,
+          "score_sum": 131.87569513438933,
+          "score_mean": 0.3296892378359733,
+          "phm21": 2.0320054116576767
+        },
+        "per_window_capped": {
+          "rmse": 3.844898041105155,
+          "mae": 2.8985344232100547,
+          "score_sum": 4867.235532852827,
+          "score_mean": 0.34377987942172816,
+          "phm21": 2.0943389602634417
+        }
+      },
+      "test_per_cycle": {
+        "n_cycles": 141,
+        "capped": {
+          "rmse": 5.067202794252751,
+          "mae": 4.0517359108929565,
+          "score_sum": 79.36561785213709,
+          "score_mean": 0.5628767223555822,
+          "phm21": 2.8150397583041666
+        },
+        "uncapped": {
+          "rmse": 7.1820275945406244,
+          "mae": 5.739679173304304,
+          "score_sum": 115.80393673240798,
+          "score_mean": 0.8213045158326807,
+          "phm21": 4.001666055186653
+        }
+      },
+      "test_per_cycle_cycles_ge6": {
+        "n_cycles": 141,
+        "capped": {
+          "rmse": 5.067202794252751,
+          "mae": 4.0517359108929565,
+          "score_sum": 79.36561785213709,
+          "score_mean": 0.5628767223555822,
+          "phm21": 2.8150397583041666
+        },
+        "uncapped": {
+          "rmse": 7.1820275945406244,
+          "mae": 5.739679173304304,
+          "score_sum": 115.80393673240798,
+          "score_mean": 0.8213045158326807,
+          "phm21": 4.001666055186653
+        }
+      },
+      "test_per_window": {
+        "capped": {
+          "rmse": 5.171178145221494,
+          "mae": 4.086204580173459,
+          "score_sum": 1520.2229695733008,
+          "score_mean": 0.5786916519121815,
+          "phm21": 2.8749348985668375
+        },
+        "uncapped": {
+          "rmse": 6.2230106576904864,
+          "mae": 4.938507587406043,
+          "score_sum": 1850.0877540804527,
+          "score_mean": 0.704258756787382,
+          "phm21": 3.4636347072389344
+        }
+      },
+      "test_per_unit_per_cycle": {
+        "11": {
+          "n_cycles": 52,
+          "capped": {
+            "rmse": 5.355927282039221,
+            "mae": 4.091190437918053,
+            "score_sum": 31.270482428560708,
+            "score_mean": 0.6013554313184751,
+            "phm21": 2.978641356678848
+          },
+          "uncapped": {
+            "rmse": 5.489270813929632,
+            "mae": 4.379651976379591,
+            "score_sum": 32.67719986466568,
+            "score_mean": 0.6284076897051093,
+            "phm21": 3.0588392518173704
+          }
+        },
+        "14": {
+          "n_cycles": 38,
+          "capped": {
+            "rmse": 3.587845825269156,
+            "mae": 3.0090405324399505,
+            "score_sum": 13.955928210634228,
+            "score_mean": 0.36726126870090076,
+            "phm21": 1.9775535469850283
+          },
+          "uncapped": {
+            "rmse": 8.456163253646688,
+            "mae": 6.482724742966267,
+            "score_sum": 35.22113266525317,
+            "score_mean": 0.9268719122435045,
+            "phm21": 4.691517582945096
+          }
+        },
+        "15": {
+          "n_cycles": 51,
+          "capped": {
+            "rmse": 5.669946101275536,
+            "mae": 4.788418047675487,
+            "score_sum": 34.13920721294217,
+            "score_mean": 0.6693962198616111,
+            "phm21": 3.1696711605685737
+          },
+          "uncapped": {
+            "rmse": 7.655410742523718,
+            "mae": 6.5727317731656845,
+            "score_sum": 47.90560420248913,
+            "score_mean": 0.9393255725978261,
+            "phm21": 4.297368157560772
+          }
+        }
+      },
+      "best_iterations": [
+        637,
+        130,
+        80,
+        58,
+        130,
+        58
+      ],
+      "n_params": 33883,
+      "train_seconds": 42.3024733179991,
+      "train_git": {
+        "sha": "a075c8f10f59c59e6dd6f69e58b6d80f8292cdf9",
+        "dirty": true
+      }
+    }
+  ]
+}

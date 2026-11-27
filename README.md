@@ -2,7 +2,7 @@
 
 > Uncertainty-aware remaining-useful-life (RUL) prediction and maintenance decision-making for turbofan engines, on NASA's N-CMAPSS dataset (simulated degradation under real recorded flight profiles), benchmarked first on the classic C-MAPSS.
 
-**Status:** Phase 1 — C-MAPSS baselines. N-CMAPSS, conformal intervals, the maintenance policy, and the API/dashboard come in later phases (see [`docs/PHASES.md`](docs/PHASES.md)).
+**Status:** Phase 2 — N-CMAPSS data pipeline, EDA and a first LightGBM baseline on DS02 (Phase 1: C-MAPSS baselines). Deep models, conformal intervals, the maintenance policy, and the API/dashboard come in later phases (see [`docs/PHASES.md`](docs/PHASES.md)).
 
 ## Results at a glance
 
@@ -83,6 +83,51 @@ Constant and Ridge are deterministic, so their std over seeds is 0 by constructi
 
 These are re-runs of simple baselines under one fixed protocol. Literature numbers use different protocols, so this is not a state-of-the-art comparison.
 
+### N-CMAPSS DS02 — LightGBM baseline (test units 11, 14, 15, per cycle)
+
+The first N-CMAPSS number. Details, data audits and figures are in [N-CMAPSS](#n-cmapss) below.
+
+<!-- results:ncmapss:start -->
+| Subset | Model | Setting | Inputs | Val RMSE (OOF) | **Test RMSE** | Test score (mean) | Test RMSE, cycles ≥ 6 | Test RMSE per window | Test RMSE uncapped | Test cycles scored / without window |
+|---|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| DS02 | LightGBM | full flight | W + X_s + residuals | 3.46 ± 0.05 | **4.39 ± 0.01** | 0.47 ± 0.00 | 4.39 ± 0.01 | 4.84 ± 0.01 | 6.89 ± 0.04 | 187 / 0 |
+| DS02 | LightGBM | full flight | W + X_s | 4.23 ± 0.01 | 5.38 ± 0.04 | 0.58 ± 0.01 | 5.50 ± 0.04 | 5.62 ± 0.02 | 10.06 ± 0.06 | 202 / 0 |
+| DS02 | LightGBM | cruise only | W + X_s + residuals | 3.71 ± 0.03 | 5.08 ± 0.02 | 0.57 ± 0.00 | 5.08 ± 0.02 | 5.17 ± 0.01 | 7.18 ± 0.03 | 141 / 46 |
+| DS02 | LightGBM | cruise only | W + X_s | 5.44 ± 0.05 | 8.70 ± 0.05 | 1.03 ± 0.00 | 8.69 ± 0.05 | 7.18 ± 0.05 | 12.93 ± 0.05 | 151 / 51 |
+
+Per test unit (per-cycle RMSE, capped truth):
+
+| Setting | Inputs | unit 11 | unit 14 | unit 15 |
+|---|---|---:|---:|---:|
+| full flight | W + X_s + residuals | 5.05 ± 0.03 | 3.14 ± 0.02 | 4.96 ± 0.02 |
+| full flight | W + X_s | 5.58 ± 0.01 | 6.09 ± 0.10 | 4.22 ± 0.05 |
+| cruise only | W + X_s + residuals | 5.36 ± 0.01 | 3.61 ± 0.03 | 5.68 ± 0.03 |
+| cruise only | W + X_s | 5.86 ± 0.06 | 13.70 ± 0.08 | 6.04 ± 0.07 |
+
+Mean ± sample std over seeds 0, 1, 2. Per-cycle metrics (median of a cycle's window predictions) are primary; RMSE in cycles, lower is better; **bold** = best test RMSE. Score = mean Saxena score (d = pred − true). Truth capped at 48 unless marked uncapped. Windows: T = 64 model samples at downsample 10 (one sample every 10 s), stride 10 for every split. Val = out-of-fold per-cycle RMSE on the calibration unit of each of the 6 rotation folds (4 train / 1 early-stopping / 1 calib unit); the test prediction is the mean of the 6 fold models. Residual models are trained and scored from cycle 6 (their baseline uses cycles 1–5), so compare runs on the "cycles ≥ 6" column.
+<!-- results:ncmapss:end -->
+
+**Findings (Phase 2).** Each hypothesis was stated before the runs. Numbers come from the table above and `reports/results/ncmapss-ds02_*.json`. DS02 has 6 dev units and 3 test units, and the ± is seed-to-seed std only: it does not capture how much the numbers would move with other engines.
+
+- **H1: healthy-baseline residuals drift with degradation. Supported for the turbine temperatures; not for P50.** These are per-cycle cruise medians, comparing the mean before hs onset with the mean of the last 5 cycles, in all 6 dev units:
+  - T48 residuals rise from ≈ 0.00–0.01 σ to 0.27–0.36 σ.
+  - T50 residuals rise from ≈ 0.00–0.02 σ to 0.40–0.67 σ.
+  - Wf rises only to 0.05–0.12 σ, and P50 stays within ±0.03 σ.
+  - Raw sensors show no visible trend, because flight conditions swamp them (see the raw-sensor figure).
+  - In the figure, the drift becomes visible well after the hs onset, not at it. This is read off the figure; no script measures the delay.
+- **H2: residual channels improve RUL. Supported on this split.** On cycles ≥ 6, where both inputs are scored on the same cycles, test per-cycle RMSE falls from 5.50 to 4.39 (full flight) and from 8.69 to 5.08 (cruise only). The out-of-fold validation RMSE falls too (4.23 → 3.46 and 5.44 → 3.71). Residual models early-stop after 50–400 rounds, while W + X_s models need thousands (best iterations in each run's `train_meta.json`).
+- **H3: cruise-only windows beat full flights (CruiseBench's motivation). Not supported here.** Full flight is better for both input sets.
+  - The comparison is not like for like. Cruise-only cannot score cycles whose cruise run is shorter than one window (46 of 187 residual-eligible test cycles, 33 of them on unit 14), and it sees only the plateau, not climb or descent.
+  - It is also only LightGBM on 64-sample summaries. Phase 3 revisits it with sequence models.
+- **H4: test units 14 and 15 (shorter, lower flights) are harder. Mixed.** The shift is real: median altitude is 23.0 kft on dev units, 11.4 kft on unit 14 and 18.9 kft on unit 15. Unit 14 also has the largest test W-extrapolation share (15.6 %).
+  - Without residuals, unit 14 is the worst case (13.70 cruise only, 6.09 full flight).
+  - With residuals, unit 14 is the *easiest* test unit (3.14 full flight). The per-engine baseline absorbs the flight-condition shift.
+- **Other observations:**
+  - Test error sits above out-of-fold validation error in every run (e.g. 4.39 vs 3.46).
+  - Per-cycle aggregation (median over a cycle's windows) beats per-window error except for cruise only with W + X_s. There, per-cycle RMSE (8.70) is worse than per-window (7.18). One untested explanation: unit 14's short cruise runs give many cycles that each have only a few windows.
+- **Budget change, made before any test evaluation:** the Phase 1 LightGBM setting (learning rate 0.02, cap 5000 rounds) stopped every W + X_s fold at the round cap with validation still improving. The four N-CMAPSS experiments use learning rate 0.05 and a 20 000-round cap; all folds now stop by early stopping. C-MAPSS is unchanged.
+- **Not comparable with CruiseBench or other papers:** the cap is 48 rather than 34, windows are 64 samples at downsample 10 rather than 256 native samples, the model is LightGBM, and the split protocol is our own.
+
 ## Protocol (C-MAPSS)
 
 - **Data:** NASA C-MAPSS (Saxena & Goebel 2008), downloaded from the primary NASA S3 URL by `scripts/download_data.py cmapss`. SHA256 checksums are in `configs/data_checksums.txt`.
@@ -109,6 +154,62 @@ These are re-runs of simple baselines under one fixed protocol. Literature numbe
 - **Metrics:** RMSE, MAE, and the Saxena asymmetric score with d = pred − true, summed for C-MAPSS. All are reported as mean ± sample std over seeds 0, 1, 2.
 - **Leakage alarm:** a capped FD001 RMSE below 11 on any seed makes `evaluate` exit non-zero (SPEC §3).
 
+## N-CMAPSS
+
+NASA N-CMAPSS: the CMAPSS engine model driven by real recorded flights (climb, cruise, descent) at 1 Hz, with run-to-failure trajectories per engine unit. Phase 2 builds the data pipeline on DS02 (6 dev units, test units 11, 14, 15) and extracts DS01–DS07 for later pooling.
+
+### Pipeline (Phase 2)
+
+- **Download** (`scripts/download_data.py ncmapss`): HEAD Content-Length check, free-disk check, resumable download, then stream extraction of DS01–DS07 through the nested `data_set.zip` without writing it to disk (Python `zipfile`, members in offset order). SHA256 and size of the archive and of each `.h5` are in [`configs/data_checksums.txt`](configs/data_checksums.txt).
+  - **Deviation from SPEC §1.2 step 6:** the 15.8 GB archive was kept (`--keep-zip`), by decision, so DS08 can be extracted later without a second download.
+- **Store** (`scripts/prepare_ncmapss.py`): each unit becomes contiguous float32 `.npy` arrays (W, X_s, Y, A, memory-mapped) plus a flight table. X_v and theta are never converted. Windows are never stored: a window index of integers `(unit, cycle, start)`, cached by config hash, slices the arrays on the fly.
+- **Cruise mask** (`aerosentinel.data.masks`, our own design): rolling-median altitude, then the longest run that is high (above the flight's mid-altitude) and stable (smoothed altitude within ±50 ft over 61 s), at least 512 samples long, with raw altitude std < 50 ft. Windows lie inside that one run; separate cruise runs are never spliced. The comparison with CruiseBench's released mask is below and in [this figure](reports/figures/ncmapss_mask_vs_cruisebench.png) (the 3 flights where the masks differ most).
+- **Healthy-baseline residuals** (`aerosentinel.data.baseline_residuals`): per engine, a small MLP W → X_s fit on **that engine's own first 5 cycles** (no hs, no labels, no other engine), giving 14 residual channels `(X_s − f_u(W)) / σ_u`. Models that use them are trained and scored from cycle 6.
+- **Windows:** T = 64 model samples at downsample 10 (10.7 min of flight), stride 10, one stride for every split, never crossing a (unit, cycle) boundary or a cruise-run edge. T was fixed by a rule set before any model was trained (table below).
+- **RUL cap: 48 for DS02, hs-derived, not SPEC's 34.** CruiseBench's η = 5 % caps match SPEC for all nine subsets, and each is below our hs-derived minimum, so nothing contradicts them. But neither CruiseBench branch says how η turns into a cap, and its η = 0 caps do not reproduce from the dev units' health state (table below). Under the rule agreed for this phase (an ambiguous definition means using caps we can derive ourselves), every N-CMAPSS cap is the minimum number of abnormal (hs = 0) cycles over a subset's dev units. For DS02 that is 48, from dev unit 16. Results are therefore not comparable with CruiseBench's capped numbers.
+- **Flight classes:** every DS02 dev unit is class 3 (> 5 h flights), so leave-one-flight-class-out (Phase 3) will run on DS03. SPEC §5.5 expected equal units per class in DS03; the dev split actually has 3 / 4 / 2.
+
+### Figures
+
+![Flight profiles by class](reports/figures/ncmapss_flight_profiles.png)
+
+![Healthy-baseline residuals over life](reports/figures/ncmapss_residuals_over_life.png)
+
+More: [raw sensors over life](reports/figures/ncmapss_sensors_over_life.png), [hs onset per unit](reports/figures/ncmapss_hs_onset.png), [altitude, dev vs test units 14/15](reports/figures/ncmapss_altitude_dev_vs_test.png), [mask vs CruiseBench](reports/figures/ncmapss_mask_vs_cruisebench.png). All are drawn by `scripts/make_eda_figures.py` (`check_caps.py` for the mask), with the cited numbers in `reports/results/ncmapss-ds02_data_eda.json`.
+
+### Data audits
+
+Generated from `reports/results/ncmapss-*_data_*.json`:
+
+<!-- results:ncmapss-data:start -->
+**Flight classes (dev units).** DS02: class 1: 0, class 2: 0, class 3: 6; DS03: class 1: 3, class 2: 4, class 3: 2. Leave-one-flight-class-out will run on **DS03** (rule: every class needs ≥ 2 dev units).
+
+**RUL caps.** CruiseBench commit `ef26d40fe0`. Caps used: **hs-derived** — CruiseBench's η=5% caps match SPEC but its cap definition is not stated (ambiguous), so per the agreed rule the hs-derived dev-unit caps are used.
+
+| Subset | SPEC (η = 5 %) | CruiseBench η = 5 % | CruiseBench η = 0 % | hs-derived (dev min abnormal cycles) | Used |
+|---|---:|---:|---:|---:|---:|
+| DS01 | 38 | 38 | 46 | 57 | 57 |
+| DS02 | 34 | 34 | 41 | 48 | 48 |
+| DS03 | 34 | 34 | 41 | 36 | 36 |
+| DS04 | 43 | 43 | 52 | 54 | 54 |
+| DS05 | 38 | 38 | 46 | 40 | 40 |
+| DS06 | 41 | 41 | 50 | 42 | 42 |
+| DS07 | 39 | 39 | 47 | 44 | 44 |
+
+**Cruise mask vs CruiseBench** (DS02 dev, 446 flights): per-flight IoU median 0.987, mean 0.951, 10th percentile 0.971, min 0.000; 96% of flights ≥ 0.9. Flights with a cruise run: ours 432, CruiseBench 444. Mean run length where both accept: ours 68 min, CruiseBench 68 min.
+
+**Cycles with ≥ 1 window** (DS02 dev, all cycles). Rule: largest T in [64, 128, 256] with >= 95% of dev cycles having >= 1 window in cruise_only at downsample 10 → **T = 64**.
+
+| Setting | Downsample | T = 64 | T = 128 | T = 256 |
+|---|---:|---:|---:|---:|
+| full_flight | 1 | 100.0% | 100.0% | 100.0% |
+| full_flight | 10 | 100.0% | 100.0% | 100.0% |
+| cruise_only | 1 | 96.9% | 96.9% | 96.9% |
+| cruise_only | 10 | 96.4% | 93.3% | 71.3% |
+
+**W-extrapolation share** (rows after cycle 5 whose flight descriptors leave the range seen in the engine's own cycles 1–5; the risk of the healthy baseline): dev: 2 1.9%, 5 20.9%, 10 7.9%, 16 5.5%, 18 3.4%, 20 8.9%; test: 11 4.4%, 14 15.6%, 15 10.9%.
+<!-- results:ncmapss-data:end -->
+
 ## Quickstart
 
 ```bash
@@ -118,8 +219,25 @@ uv run python scripts/run_cmapss_baselines.py # train 20 experiments × 3 seeds,
 make test                                     # fast tests
 ```
 
+N-CMAPSS (Phase 2; ~16 GB download, ~21 GB of `.h5`, ~10 min extraction):
+
+```bash
+make data-ncmapss                                        # download, stream-extract DS01–DS07, checksums
+uv run python scripts/prepare_ncmapss.py --datasets DS02 # per-unit arrays, cruise runs, baselines
+uv run python scripts/audit_flight_classes.py            # Fc audit
+git clone --depth 1 https://github.com/NostalgiaJohn/CruiseBench /tmp/cruisebench
+uv run python scripts/check_caps.py --cruisebench /tmp/cruisebench   # caps + mask comparison
+uv run python scripts/window_coverage.py                 # cycles with >= 1 window, fixes T
+uv run python scripts/make_eda_figures.py                # reports/figures/ncmapss_*.png
+uv run python scripts/run_ncmapss_baselines.py           # 4 LightGBM experiments x 3 seeds
+```
+
 Run a single experiment with `make train EXP=cmapss-fd001_lgbm_cap125`, then `uv run python -m aerosentinel.evaluate experiment=cmapss-fd001_lgbm_cap125`.
 
 ## Citation
 
 A. Saxena and K. Goebel (2008). "Turbofan Engine Degradation Simulation Data Set", NASA Prognostics Data Repository, NASA Ames Research Center, Moffett Field, CA.
+
+M. Arias Chao, C. Kulkarni, K. Goebel, O. Fink (2021). "Aircraft Engine Run-to-Failure Dataset under Real Flight Conditions for Prognostics and Diagnostics." *Data* 6(1):5. doi:10.3390/data6010005.
+
+CruiseBench and its released cruise mask (CPM-N-CMAPSS): github.com/NostalgiaJohn/CruiseBench (checked at commit `ef26d40`). Used only to compare caps and the cruise mask; none of its code is used here.
