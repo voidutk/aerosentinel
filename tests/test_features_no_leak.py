@@ -212,3 +212,30 @@ def test_selector_drops_quantized_sensors_within_every_regime() -> None:
     assert off.dropped_ == ["s1"]
     with pytest.raises(ValueError, match="same rows"):
         sel.fit(norm, raw.iloc[1:])
+
+
+def test_ncmapss_channels_are_inputs_only() -> None:
+    """N-CMAPSS channel groups admit W, X_s and residuals; any other group is rejected."""
+    from aerosentinel.data import ncmapss_windows as nw
+
+    assert set(nw.CHANNEL_GROUPS) == {"W", "X_s", "residuals"}
+
+    class _Store:
+        var_names = {
+            "W": ["alt", "Mach", "TRA", "T2"],
+            "X_s": ["T24", "T30"],
+            "A": ["unit", "cycle", "Fc", "hs"],
+            "Y": ["RUL"],
+        }
+
+    names = nw.channel_names(_Store(), ["W", "X_s", "residuals"])  # type: ignore[arg-type]
+    assert names == ["alt", "Mach", "TRA", "T2", "T24", "T30", "r_T24", "r_T30"]
+    for banned in ("A", "Y", "X_v", "T"):
+        with pytest.raises(ValueError):
+            nw.channel_names(_Store(), [banned])  # type: ignore[arg-type]
+
+
+def test_ncmapss_store_never_holds_xv_or_theta() -> None:
+    from aerosentinel.data.ncmapss import STORE_GROUPS
+
+    assert set(STORE_GROUPS) == {"W", "X_s", "Y", "A"}

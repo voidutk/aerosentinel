@@ -8,7 +8,7 @@ per-segment arrays on the fly.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -132,11 +132,13 @@ def aggregate_per_cycle(
     (units, cycles, medians)
         Unique keys sorted by (unit, cycle) and the median per key.
     """
-    keys = np.stack([unit, cycle], axis=1)
+    keys = np.stack([np.asarray(unit), np.asarray(cycle)], axis=1)
     uniq, inv = np.unique(keys, axis=0, return_inverse=True)
     inv = inv.reshape(-1)
     p = np.asarray(pred, dtype=np.float64)
-    med = np.stack([np.median(p[inv == i], axis=0) for i in range(len(uniq))])
+    order = np.argsort(inv, kind="stable")
+    groups = np.split(p[order], np.cumsum(np.bincount(inv, minlength=len(uniq)))[:-1])
+    med = np.stack([np.median(g, axis=0) for g in groups])
     return uniq[:, 0], uniq[:, 1], med
 
 
@@ -176,3 +178,111 @@ class WindowDataset(Dataset[tuple[torch.Tensor, torch.Tensor]]):
         x = torch.from_numpy(self.window_view(i))
         y = torch.tensor(self.labels[seg][end], dtype=torch.float32)
         return x, y
+
+
+# --- N-CMAPSS: windows over flights inside per-unit arrays ---------------------------------
+
+
+@dataclass(frozen=True)
+class FlightWindowIndex:
+    """Window index ``(unit, cycle, start)`` over per-unit native-resolution arrays.
+
+    Window ``i`` covers the rows ``start[i] + k * arange(T)`` of unit ``unit[i]``'s arrays
+    (``k`` = ``downsample``), all inside one flight segment. The label is read at
+    :attr:`end`. Only integers are stored; windows are gathered on the fly.
+
+    Attributes
+    ----------
+    unit, cycle, start : numpy.ndarray
+        int64 arrays of equal length; ``start`` is a row offset in the unit's arrays.
+    window : int
+        Window length T in model samples.
+    stride : int
+        Stride s in model samples (s * k native rows); the same value for every split.
+    downsample : int
+        Downsample factor k (every k-th native sample).
+    """
+
+    unit: IntArray
+    cycle: IntArray
+    start: IntArray
+    window: int
+    stride: int
+    downsample: int
+
+    def __len__(self) -> int:
+        return int(self.unit.shape[0])
+
+    @property
+    def end(self) -> IntArray:
+        """Row offset of the last sample of each window (where the label is read)."""
+        return self.start + self.downsample * (self.window - 1)
+
+    def rows(self, i: slice | IntArray) -> IntArray:
+        """Row offsets ``[B, T]`` of the selected windows."""
+        st = self.start[i]
+        return st[:, None] + self.downsample * np.arange(self.window, dtype=np.int64)[None, :]
+
+    def to_npz(self) -> dict[str, IntArray]:
+        """Arrays for :func:`numpy.savez` (inverse of :meth:`from_npz`)."""
+        meta = np.array([self.window, self.stride, self.downsample], dtype=np.int64)
+        return {"unit": self.unit, "cycle": self.cycle, "start": self.start, "meta": meta}
+
+    @classmethod
+    def from_npz(cls, d: Mapping[str, IntArray]) -> FlightWindowIndex:
+        """Rebuild an index saved with :meth:`to_npz`."""
+        t, s, k = (int(v) for v in d["meta"])
+        return cls(np.asarray(d["unit"]), np.asarray(d["cycle"]), np.asarray(d["start"]), t, s, k)
+
+
+def n_samples_downsampled(length: int, downsample: int) -> int:
+    """Model samples in a segment of ``length`` native rows, keeping every k-th row."""
+    return 0 if length <= 0 else (length - 1) // downsample + 1
+
+
+def build_flight_index(
+    segments: Sequence[tuple[int, int, int, int]], window: int, stride: int, downsample: int = 1
+) -> FlightWindowIndex:
+    """End-aligned windows inside each ``(unit, cycle, seg_start, seg_end)`` segment.
+
+    Downsampling keeps native rows ``seg_end - 1 - k*j`` (anchored at the segment end), so the
+    last window of every segment ends exactly on the segment's last row. A segment with
+    ``m`` model samples yields :func:`n_windows` ``(m, T, s)`` windows; none if ``m < T``.
+    Segments never share a window, so windows cannot cross a (unit, cycle) boundary or a
+    cruise-run edge.
+
+    Parameters
+    ----------
+    segments : sequence of (unit, cycle, seg_start, seg_end)
+        Half-open native row ranges in each unit's arrays (one per flight, at most).
+    window, stride : int
+        T and s in model samples.
+    downsample : int, default 1
+        k.
+
+    Returns
+    -------
+    FlightWindowIndex
+        Windows ordered as the segments, then by start.
+    """
+    if downsample < 1:
+        raise ValueError("downsample must be >= 1")
+    us: list[IntArray] = []
+    cs: list[IntArray] = []
+    sts: list[IntArray] = []
+    k = downsample
+    for unit, cycle, s0, s1 in segments:
+        m = n_samples_downsampled(int(s1) - int(s0), k)
+        nw = n_windows(m, window, stride)
+        if nw == 0:
+            continue
+        ends = (int(s1) - 1) - k * stride * np.arange(nw - 1, -1, -1, dtype=np.int64)
+        sts.append(ends - k * (window - 1))
+        us.append(np.full(nw, unit, dtype=np.int64))
+        cs.append(np.full(nw, cycle, dtype=np.int64))
+    if not us:
+        e = np.zeros(0, dtype=np.int64)
+        return FlightWindowIndex(e, e.copy(), e.copy(), window, stride, downsample)
+    return FlightWindowIndex(
+        np.concatenate(us), np.concatenate(cs), np.concatenate(sts), window, stride, downsample
+    )
