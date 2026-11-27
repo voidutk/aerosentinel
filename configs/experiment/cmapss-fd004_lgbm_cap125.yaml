@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - override /data: cmapss_fd004
+  - override /model: lgbm
+
+name: cmapss-fd004_lgbm_cap125

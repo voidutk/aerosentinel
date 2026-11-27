@@ -1,0 +1,17 @@
+# 1D-CNN, Li et al. 2018 style (SPEC §5.1 item 2). Training defaults from SPEC §5.3.
+name: cnn1d
+arch:
+  n_conv: 4
+  filters: 10
+  kernel: 10
+  final_kernel: 3
+  fc: 100
+  dropout: 0.5
+train:
+  lr: 3.0e-4
+  weight_decay: 1.0e-2
+  batch_size: 256
+  max_epochs: 100
+  patience: 10
+  warmup_frac: 0.05
+  grad_clip: 1.0

@@ -40,7 +40,7 @@ The headline story for interviews: *"Point predictions are useless to a maintena
 | FD001 | 100 | 100 | 1 (sea level) | 1 (HPC) |
 | FD002 | 260 | 259 | 6 | 1 (HPC) |
 | FD003 | 100 | 100 | 1 | 2 (HPC, Fan) |
-| FD004 | 248 | 249 | 6 | 2 (HPC, Fan) |
+| FD004 | 249 | 248 | 6 | 2 (HPC, Fan) |
 
 - Train trajectories run to failure. Test trajectories stop before failure; `RUL_FD00x.txt` gives the true RUL at the last test cycle. Standard evaluation uses **only the last window of each test unit**.
 - Test metrics are reported against two versions of the truth: **capped at 125 (primary)** and uncapped (secondary). The leakage alarm (§3) applies to the capped number.
@@ -85,7 +85,7 @@ The headline story for interviews: *"Point predictions are useless to a maintena
 4. **Flight-stage handling:** two settings, both reported separately:
    - `full_flight`: all samples.
    - `cruise_only`: altitude-plateau mask (rolling-median altitude, find longest stable high-altitude run ≥ 512 samples, std < 50 ft). Windows lie entirely inside that contiguous run; non-contiguous cruise samples are **never spliced** into one window. Implement our own mask function, test it, and compare with CruiseBench's released mask (github.com/NostalgiaJohn/CruiseBench).
-5. **Normalization:** fit scalers on training units only. For C-MAPSS FD002/FD004, per-operating-regime normalization (KMeans k=6 on the 3 settings, fit on train). The near-constant-sensor variance threshold runs **after** regime normalization.
+5. **Normalization:** fit scalers on training units only. For C-MAPSS FD002/FD004, per-operating-regime normalization (KMeans k=6 on the 3 settings, fit on train). Sensor selection runs **after** regime normalization, fit on training units: drop sensors whose normalized variance is below a threshold, **and** sensors with ≤ 2 distinct raw values within every regime (quantized near-binary sensors, which a per-regime z-score turns into large spikes; added in Phase 1 review).
    - For N-CMAPSS, standardize X_s **conditioned on W** with a **per-engine healthy baseline**. For each engine (train, val, calib and test alike), fit a small MLP W → X_s on **that engine's own first 5 cycles**, using no `hs` and no other engine, and feed residuals `X_s − f_u(W)` as extra channels.
    - The baseline uses only the engine's own past, so it is legal at inference, and it absorbs each engine's unknown initial health.
    - Residuals on cycles 1–5 are in-sample (near zero by construction). Models with residual channels therefore predict from cycle 6 onward in walk-forward use (§7).
@@ -179,7 +179,7 @@ aerosentinel/
 **Results naming (single scheme):** `reports/results/<dataset>_<model>_<setting>.json`. Rules:
 - Lowercase. `_` separates the three fields; `-` joins words inside a field.
 - `dataset` ∈ `cmapss-fd001…cmapss-fd004`, `ncmapss-ds01…ncmapss-ds07`, `ncmapss-pooled`.
-- `model` ∈ `lgbm`, `cnn1d`, `lstm`, `tcn`, `tsmixer`, `transformer`, or `data` for data audits.
+- `model` ∈ `constant`, `ridge` (naive baselines), `lgbm`, `cnn1d`, `lstm`, `tcn`, `tsmixer`, `transformer`, or `data` for data audits.
 - `setting` encodes everything else that defines the run, e.g. `single-cruise-cap34-ds10`, `cqr-unit-a10`, `policy-cf10`.
 - The Hydra experiment name equals the file stem, so `configs/experiment/<stem>.yaml` → `reports/results/<stem>.json`.
 
@@ -191,7 +191,7 @@ aerosentinel/
 1. **LightGBM on engineered features:** per window — last value, mean, std, slope (linear fit), min/max of each sensor + regime id. Fast, strong, explainable. Many papers underrate this.
 2. **1D-CNN** (Li et al. 2018 style): window 30, 5 conv layers, dropout.
 3. **LSTM** (2 layers, 64 hidden).
-Drop near-constant sensors on C-MAPSS (variance threshold fit on train, applied **after** regime normalization for FD002/FD004; FD001 typically s1, s5, s6, s10, s16, s18, s19).
+Drop near-constant sensors on C-MAPSS (fit on train, applied **after** regime normalization for FD002/FD004: a variance threshold plus a ≤ 2-distinct-raw-values-per-regime rule, §1.3 item 5; FD001 typically s1, s5, s6, s10, s16, s18, s19). The dropped list per rule goes in every results JSON.
 
 ### 5.2 Main architectures (Phase 3)
 - **TCN** (dilated causal convs, residual blocks) — strong and stable per CruiseBench.

@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - override /data: cmapss_fd001
+  - override /model: ridge
+
+name: cmapss-fd001_ridge_cap125

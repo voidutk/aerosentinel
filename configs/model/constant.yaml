@@ -1,0 +1,2 @@
+# Naive baseline: mean capped RUL of the train-split training windows.
+name: constant

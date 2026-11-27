@@ -1,0 +1,6 @@
+# @package _global_
+defaults:
+  - override /data: cmapss_fd004
+  - override /model: constant
+
+name: cmapss-fd004_constant_cap125

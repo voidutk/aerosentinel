@@ -1,0 +1,345 @@
+{
+  "experiment": "cmapss-fd001_lgbm_cap125",
+  "dataset": "cmapss-fd001",
+  "model": "lgbm",
+  "setting": "cap125",
+  "written_by": "aerosentinel.evaluate",
+  "protocol": {
+    "split": "unit-level; val = 20% of train-file units (split_seed=0); preprocessing fit on train-split units only",
+    "test": "last window per official test unit; edge-padded (first cycle repeated) when the unit has fewer cycles than the window",
+    "truth": "capped at 125 (primary) and uncapped (secondary)",
+    "score": "Saxena score, d = pred - true; score_sum is the C-MAPSS convention",
+    "std": "sample std over seeds (ddof=1)"
+  },
+  "config_hash": "660623edf0c20e3c",
+  "config": {
+    "name": "cmapss-fd001_lgbm_cap125",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "split_seed": 0,
+    "deterministic": true,
+    "mlflow": {
+      "tracking_uri": null,
+      "experiment": "aerosentinel-cmapss"
+    },
+    "data": {
+      "dataset": "cmapss-fd001",
+      "family": "cmapss",
+      "subset": "FD001",
+      "cap": 125,
+      "window": 30,
+      "stride": 1,
+      "val_frac": 0.2,
+      "n_regimes": 1,
+      "var_threshold": 0.0001,
+      "max_distinct": 2
+    },
+    "model": {
+      "name": "lgbm",
+      "early_stopping_rounds": 200,
+      "params": {
+        "n_estimators": 5000,
+        "learning_rate": 0.02,
+        "num_leaves": 31,
+        "min_child_samples": 50,
+        "subsample": 0.8,
+        "subsample_freq": 1,
+        "colsample_bytree": 0.8,
+        "reg_lambda": 1.0
+      }
+    }
+  },
+  "git": {
+    "sha": "7daaf0abe230c12e20cf734a4e7d34e0b74b9253",
+    "dirty": false
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "n_test_units": 100,
+  "n_padded_test_units": 0,
+  "min_test_length": 31,
+  "n_train_units": 80,
+  "n_val_units": 20,
+  "n_train_windows": 14042,
+  "channels": [
+    "s2",
+    "s3",
+    "s4",
+    "s7",
+    "s8",
+    "s9",
+    "s11",
+    "s12",
+    "s13",
+    "s14",
+    "s15",
+    "s17",
+    "s20",
+    "s21"
+  ],
+  "sensors_dropped": [
+    "s1",
+    "s5",
+    "s6",
+    "s10",
+    "s16",
+    "s18",
+    "s19"
+  ],
+  "sensors_dropped_by_rule": {
+    "variance": [
+      "s1",
+      "s5",
+      "s10",
+      "s16",
+      "s18",
+      "s19"
+    ],
+    "few_distinct": [
+      "s6"
+    ]
+  },
+  "n_inputs": 85,
+  "summary": {
+    "val": {
+      "rmse": {
+        "mean": 12.276270754394616,
+        "std": 0.07542655544172312
+      },
+      "mae": {
+        "mean": 8.970163335922535,
+        "std": 0.0558702284306672
+      },
+      "score_sum": {
+        "mean": 7522.435721678565,
+        "std": 98.1188004398941
+      },
+      "score_mean": {
+        "mean": 2.039153082591099,
+        "std": 0.026597668864162257
+      },
+      "phm21": {
+        "mean": 7.157711918492858,
+        "std": 0.05091485985765907
+      }
+    },
+    "test_capped": {
+      "rmse": {
+        "mean": 12.440694635828393,
+        "std": 0.2725892681682724
+      },
+      "mae": {
+        "mean": 9.105475891431174,
+        "std": 0.21504336147220615
+      },
+      "score_sum": {
+        "mean": 242.8027834844385,
+        "std": 12.567773334078526
+      },
+      "score_mean": {
+        "mean": 2.4280278348443853,
+        "std": 0.12567773334078539
+      },
+      "phm21": {
+        "mean": 7.4343612353363895,
+        "std": 0.1981804383587761
+      }
+    },
+    "test_uncapped": {
+      "rmse": {
+        "mean": 13.739732701899698,
+        "std": 0.2854048614236808
+      },
+      "mae": {
+        "mean": 10.175475891431171,
+        "std": 0.21504336147220607
+      },
+      "score_sum": {
+        "mean": 276.8597628390289,
+        "std": 13.341616342025798
+      },
+      "score_mean": {
+        "mean": 2.7685976283902893,
+        "std": 0.1334161634202581
+      },
+      "phm21": {
+        "mean": 8.254165165144995,
+        "std": 0.2085333815932656
+      }
+    },
+    "test_capped_by_padding": {
+      "padded": null,
+      "not_padded": {
+        "n_units": {
+          "mean": 100.0,
+          "std": 0.0
+        },
+        "rmse": {
+          "mean": 12.440694635828393,
+          "std": 0.2725892681682724
+        },
+        "mae": {
+          "mean": 9.105475891431174,
+          "std": 0.21504336147220615
+        },
+        "score_sum": {
+          "mean": 242.8027834844385,
+          "std": 12.567773334078526
+        },
+        "score_mean": {
+          "mean": 2.4280278348443853,
+          "std": 0.12567773334078539
+        },
+        "phm21": {
+          "mean": 7.4343612353363895,
+          "std": 0.1981804383587761
+        }
+      }
+    }
+  },
+  "per_seed": [
+    {
+      "seed": 0,
+      "val": {
+        "rmse": 12.243100083445098,
+        "mae": 8.999924439923749,
+        "score_sum": 7465.020819236508,
+        "score_mean": 2.0235892705981318,
+        "phm21": 7.133344677021615
+      },
+      "test_capped": {
+        "rmse": 12.377432394184241,
+        "mae": 9.12302312374115,
+        "score_sum": 236.9779601332853,
+        "score_mean": 2.369779601332853,
+        "phm21": 7.373605997758547
+      },
+      "test_uncapped": {
+        "rmse": 13.688352603938855,
+        "mae": 10.193023123741149,
+        "score_sum": 271.5323784218317,
+        "score_mean": 2.715323784218317,
+        "phm21": 8.201838194078586
+      },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 12.377432394184241,
+          "mae": 9.12302312374115,
+          "score_sum": 236.9779601332853,
+          "score_mean": 2.369779601332853,
+          "phm21": 7.373605997758547
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
+      "n_params": 7626,
+      "train_seconds": 2.576461130000098,
+      "fit_info": {
+        "best_iteration": 246
+      }
+    },
+    {
+      "seed": 1,
+      "val": {
+        "rmse": 12.36259808014333,
+        "mae": 9.004852834772889,
+        "score_sum": 7635.7300852025055,
+        "score_mean": 2.069864485010167,
+        "phm21": 7.216231282576748
+      },
+      "test_capped": {
+        "rmse": 12.739352582469772,
+        "mae": 9.311208028793335,
+        "score_sum": 257.22616824106564,
+        "score_mean": 2.5722616824106566,
+        "phm21": 7.655807132440215
+      },
+      "test_uncapped": {
+        "rmse": 14.047337630009302,
+        "mae": 10.381208028793335,
+        "score_sum": 292.0419596736347,
+        "score_mean": 2.9204195967363473,
+        "phm21": 8.483878613372825
+      },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 12.739352582469772,
+          "mae": 9.311208028793335,
+          "score_sum": 257.22616824106564,
+          "score_mean": 2.5722616824106566,
+          "phm21": 7.655807132440215
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
+      "n_params": 7812,
+      "train_seconds": 3.3035703420027858,
+      "fit_info": {
+        "best_iteration": 252
+      }
+    },
+    {
+      "seed": 2,
+      "val": {
+        "rmse": 12.22311409959542,
+        "mae": 8.90571273307097,
+        "score_sum": 7466.556260596681,
+        "score_mean": 2.024005492164999,
+        "phm21": 7.12355979588021
+      },
+      "test_capped": {
+        "rmse": 12.205298930831168,
+        "mae": 8.882196521759033,
+        "score_sum": 234.2042220789645,
+        "score_mean": 2.342042220789645,
+        "phm21": 7.2736705758104065
+      },
+      "test_uncapped": {
+        "rmse": 13.48350787175094,
+        "mae": 9.952196521759033,
+        "score_sum": 267.0049504216204,
+        "score_mean": 2.6700495042162036,
+        "phm21": 8.076778687983571
+      },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 12.205298930831168,
+          "mae": 8.882196521759033,
+          "score_sum": 234.2042220789645,
+          "score_mean": 2.342042220789645,
+          "phm21": 7.2736705758104065
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
+      "n_params": 9269,
+      "train_seconds": 3.6509213659992383,
+      "fit_info": {
+        "best_iteration": 299
+      }
+    }
+  ],
+  "leakage_alarm": {
+    "threshold_rmse": 11.0,
+    "triggered": false,
+    "seeds": []
+  }
+}
