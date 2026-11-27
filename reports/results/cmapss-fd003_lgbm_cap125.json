@@ -11,7 +11,7 @@
     "score": "Saxena score, d = pred - true; score_sum is the C-MAPSS convention",
     "std": "sample std over seeds (ddof=1)"
   },
-  "config_hash": "a9314176e03426b2",
+  "config_hash": "211ea0dd52c0c72d",
   "config": {
     "name": "cmapss-fd003_lgbm_cap125",
     "seeds": [
@@ -34,7 +34,8 @@
       "stride": 1,
       "val_frac": 0.2,
       "n_regimes": 1,
-      "var_threshold": 0.0001
+      "var_threshold": 0.0001,
+      "max_distinct": 2
     },
     "model": {
       "name": "lgbm",
@@ -52,8 +53,8 @@
     }
   },
   "git": {
-    "sha": "aa3fba96bd56559dd3b74fb53ce308dac01c8187",
-    "dirty": true
+    "sha": "7daaf0abe230c12e20cf734a4e7d34e0b74b9253",
+    "dirty": false
   },
   "seeds": [
     0,
@@ -91,6 +92,16 @@
     "s18",
     "s19"
   ],
+  "sensors_dropped_by_rule": {
+    "variance": [
+      "s1",
+      "s5",
+      "s16",
+      "s18",
+      "s19"
+    ],
+    "few_distinct": []
+  },
   "n_inputs": 97,
   "summary": {
     "val": {
@@ -158,6 +169,35 @@
         "mean": 8.784107549975644,
         "std": 0.04808834646972833
       }
+    },
+    "test_capped_by_padding": {
+      "padded": null,
+      "not_padded": {
+        "n_units": {
+          "mean": 100.0,
+          "std": 0.0
+        },
+        "rmse": {
+          "mean": 12.900615074797031,
+          "std": 0.045191695364335406
+        },
+        "mae": {
+          "mean": 9.04638663450877,
+          "std": 0.07546109873220165
+        },
+        "score_sum": {
+          "mean": 282.75989249496,
+          "std": 3.4918267309249322
+        },
+        "score_mean": {
+          "mean": 2.8275989249496,
+          "std": 0.034918267309249226
+        },
+        "phm21": {
+          "mean": 7.864106999873315,
+          "std": 0.03987018776136414
+        }
+      }
     }
   },
   "per_seed": [
@@ -184,8 +224,23 @@
         "score_mean": 3.2464484089046604,
         "phm21": 8.838933214700619
       },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 12.950400798077585,
+          "mae": 9.114754424095153,
+          "score_sum": 286.3020323867819,
+          "score_mean": 2.863020323867819,
+          "phm21": 7.9067105609727015
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
       "n_params": 13113,
-      "train_seconds": 4.5671540739986085,
+      "train_seconds": 4.17400413499854,
       "fit_info": {
         "best_iteration": 423
       }
@@ -213,8 +268,23 @@
         "score_mean": 3.1926687203689017,
         "phm21": 8.764316983141939
       },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 12.889261993360913,
+          "mae": 9.05898694038391,
+          "score_sum": 282.6569915029849,
+          "score_mean": 2.826569915029849,
+          "phm21": 7.857915954195381
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
       "n_params": 15283,
-      "train_seconds": 4.401997462000509,
+      "train_seconds": 4.987836748001428,
       "fit_info": {
         "best_iteration": 493
       }
@@ -242,8 +312,23 @@
         "score_mean": 3.1734577548329206,
         "phm21": 8.749072452084379
       },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 12.862182432952594,
+          "mae": 8.965418539047242,
+          "score_sum": 279.32065359511336,
+          "score_mean": 2.7932065359511338,
+          "phm21": 7.827694484451864
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
       "n_params": 13268,
-      "train_seconds": 3.852260459001627,
+      "train_seconds": 4.721307460000389,
       "fit_info": {
         "best_iteration": 428
       }

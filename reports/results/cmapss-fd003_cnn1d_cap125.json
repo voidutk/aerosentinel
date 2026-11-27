@@ -11,7 +11,7 @@
     "score": "Saxena score, d = pred - true; score_sum is the C-MAPSS convention",
     "std": "sample std over seeds (ddof=1)"
   },
-  "config_hash": "1a80bc502e77a0b5",
+  "config_hash": "9ca61b19b835a9b8",
   "config": {
     "name": "cmapss-fd003_cnn1d_cap125",
     "seeds": [
@@ -34,7 +34,8 @@
       "stride": 1,
       "val_frac": 0.2,
       "n_regimes": 1,
-      "var_threshold": 0.0001
+      "var_threshold": 0.0001,
+      "max_distinct": 2
     },
     "model": {
       "name": "cnn1d",
@@ -58,8 +59,8 @@
     }
   },
   "git": {
-    "sha": "aa3fba96bd56559dd3b74fb53ce308dac01c8187",
-    "dirty": true
+    "sha": "7daaf0abe230c12e20cf734a4e7d34e0b74b9253",
+    "dirty": false
   },
   "seeds": [
     0,
@@ -97,6 +98,16 @@
     "s18",
     "s19"
   ],
+  "sensors_dropped_by_rule": {
+    "variance": [
+      "s1",
+      "s5",
+      "s16",
+      "s18",
+      "s19"
+    ],
+    "few_distinct": []
+  },
   "n_inputs": 16,
   "summary": {
     "val": {
@@ -164,6 +175,35 @@
         "mean": 10.07428534926086,
         "std": 0.6209776031616314
       }
+    },
+    "test_capped_by_padding": {
+      "padded": null,
+      "not_padded": {
+        "n_units": {
+          "mean": 100.0,
+          "std": 0.0
+        },
+        "rmse": {
+          "mean": 14.207138510158943,
+          "std": 0.649921018618642
+        },
+        "mae": {
+          "mean": 11.173245876530805,
+          "std": 1.0312384167291482
+        },
+        "score_sum": {
+          "mean": 381.31926050446174,
+          "std": 15.104158805099248
+        },
+        "score_mean": {
+          "mean": 3.813192605044618,
+          "std": 0.1510415880509924
+        },
+        "phm21": {
+          "mean": 9.010165557601779,
+          "std": 0.39531690869047303
+        }
+      }
     }
   },
   "per_seed": [
@@ -190,13 +230,28 @@
         "score_mean": 3.985881333368322,
         "phm21": 9.380877341325375
       },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 13.465699986162456,
+          "mae": 9.98354636669159,
+          "score_sum": 366.61127713966494,
+          "score_mean": 3.6661127713966493,
+          "phm21": 8.565906378779552
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
       "n_params": 51372,
-      "train_seconds": 615.027789406,
+      "train_seconds": 634.6012448349975,
       "fit_info": {
         "best_epoch": 43,
         "best_val_rmse": 13.580961847919395,
         "epochs_run": 54,
-        "train_seconds": 615.0184072369993
+        "train_seconds": 634.5739557689994
       }
     },
     {
@@ -222,13 +277,28 @@
         "score_mean": 4.309817106789868,
         "phm21": 10.262868562291514
       },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 14.47736390770405,
+          "mae": 11.724346581697464,
+          "score_sum": 380.5558614598284,
+          "score_mean": 3.8055586145982843,
+          "phm21": 9.141461261151166
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
       "n_params": 51372,
-      "train_seconds": 345.0116840109986,
+      "train_seconds": 341.3225114599991,
       "fit_info": {
         "best_epoch": 18,
         "best_val_rmse": 14.532404538507366,
         "epochs_run": 29,
-        "train_seconds": 344.98119907399996
+        "train_seconds": 341.3029472479975
       }
     },
     {
@@ -254,13 +324,28 @@
         "score_mean": 4.6043327328396035,
         "phm21": 10.579110144165693
       },
+      "test_capped_by_padding": {
+        "padded": null,
+        "not_padded": {
+          "n_units": 100,
+          "rmse": 14.678351636610325,
+          "mae": 11.811844681203365,
+          "score_sum": 396.790642913892,
+          "score_mean": 3.9679064291389197,
+          "phm21": 9.323129032874622
+        }
+      },
+      "train_git": {
+        "sha": "9aa7ff14064c3b18234ef5ff3b8c4f78ece338cc",
+        "dirty": false
+      },
       "n_params": 51372,
-      "train_seconds": 299.6082535170008,
+      "train_seconds": 309.48886828800096,
       "fit_info": {
         "best_epoch": 14,
         "best_val_rmse": 14.758136930702932,
         "epochs_run": 25,
-        "train_seconds": 299.5944952869995
+        "train_seconds": 309.47085007900023
       }
     }
   ],
